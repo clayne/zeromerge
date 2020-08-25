@@ -1,6 +1,7 @@
 zeromerge: combine file with zero blocks into one unified file
 
 Author: Jody Bruchon <jody@jodybruchon.com>
+License: The MIT License (see LICENSE file for details)
 
 This program merges two files that are supposed to be identical but have
 missing data in one or both files that manifests as zeroed blocks. This
