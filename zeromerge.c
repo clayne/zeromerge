@@ -6,8 +6,10 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <limits.h>
 #include "version.h"
 
 /* Block size to scan for merging */
@@ -163,6 +165,6 @@ error_short_read:
 	fprintf(stderr, "Error: short read\n");
 	exit(EXIT_FAILURE);
 error_short_write:
-	fprintf(stderr, "Error: short write (%lld != %lld or %lld)\n", write, read1, read2);
+	fprintf(stderr, "Error: short write (%ld != %ld or %ld)\n", (long)write, (long)read1, (long)read2);
 	exit(EXIT_FAILURE);
 }
