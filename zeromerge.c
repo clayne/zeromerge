@@ -89,7 +89,7 @@ int main(int argc, char **argv)
 		if (ferror(file1)) goto error_file1;
 		if (ferror(file2)) goto error_file2;
 	
-		switch (compare_blocks(buf1, buf2, BSIZE)) {
+		switch (compare_blocks(buf1, buf2, read1)) {
 			default:
 			case -1:  /* -1 = blocks are non-zero and do not match */
 				goto error_different;
