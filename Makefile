@@ -7,12 +7,12 @@ OBJS = zeromerge.o
 
 ifeq ($(OS), Windows_NT)
 	PROGRAM_NAME ?= zeromerge.exe
-        UNAME_S=$(shell uname -s)
-        ifeq ($(UNAME_S), MINGW32_NT-5.1)
-                OBJS += winres_xp.o
-        else
-                OBJS += winres.o
-        endif
+	UNAME_S=$(shell uname -s)
+	ifeq ($(UNAME_S), MINGW32_NT-5.1)
+		OBJS += winres_xp.o
+	else
+		OBJS += winres.o
+	endif
 else
 	PROGRAM_NAME ?= zeromerge
 endif
@@ -46,8 +46,17 @@ install:
 uninstall:
 	rm -f $$DESTDIR/usr/bin/$(PROGRAM_NAME)
 
-clean:
-	rm -f $(PROGRAM_NAME) *~ *.o test_output.bin
-
 test: zeromerge
 	./test.sh
+
+clean:
+	$(RM) $(OBJS) $(OBJS_CLEAN) $(PROGRAM_NAME) *~ *.gcno *.gcda *.gcov
+
+distclean: clean
+	$(RM) *.pkg.tar.xz
+	$(RM) -r zeromerge-*-*/ zeromerge-*-*.zip
+
+chrootpackage:
+	+./chroot_build.sh
+package:
+	+./generate_packages.sh
