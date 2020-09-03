@@ -53,7 +53,7 @@ clean:
 	$(RM) $(OBJS) $(OBJS_CLEAN) $(PROGRAM_NAME) *~ *.gcno *.gcda *.gcov
 
 distclean: clean
-	$(RM) *.pkg.tar.xz
+	$(RM) *.pkg.tar.*
 	$(RM) -r zeromerge-*-*/ zeromerge-*-*.zip
 
 chrootpackage:
