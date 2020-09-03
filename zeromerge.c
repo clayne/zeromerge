@@ -64,8 +64,9 @@ int main(int argc, char **argv)
 	static FILE *file1, *file2, *file3;
 	static struct stat stat1, stat2;
 	static off_t remain;
+	static off_t read1, read2, write;
 
-	if (argc != 3) goto error_argcount;
+	if (argc != 4) goto error_argcount;
 
 	file1 = fopen(argv[1], FOPEN_R);
 	if (!file1) goto error_file1;
@@ -81,7 +82,6 @@ int main(int argc, char **argv)
 
 	/* Main loop */
 	while (remain > 0) {
-		off_t read1, read2, write;
 
 		read1 = (off_t)fread(&buf1, 1, BSIZE, file1);
 		read2 = (off_t)fread(&buf2, 1, BSIZE, file2);
@@ -96,11 +96,11 @@ int main(int argc, char **argv)
 				break;
 			case 0:  /*  0 = both blocks are identical */
 			case 2:  /*  2 = buf1 is non-zero and buf2 is zero */
-				write = (off_t)fwrite(&buf1, (size_t)read1, 1, file3);
+				write = (off_t)fwrite(&buf1, 1, (size_t)read1, file3);
 				if (write != read1) goto error_short_write;
 				break;
 			case 1:  /*  1 = buf1 is zero and buf2 is non-zero */
-				write = (off_t)fwrite(&buf2, (size_t)read2, 1, file3);
+				write = (off_t)fwrite(&buf2, 1, (size_t)read2, file3);
 				if (write != read2) goto error_short_write;
 				break;
 		}
@@ -133,6 +133,6 @@ error_short_read:
 	fprintf(stderr, "Error: short read\n");
 	exit(EXIT_FAILURE);
 error_short_write:
-	fprintf(stderr, "Error: short write\n");
+	fprintf(stderr, "Error: short write (%ld != %ld or %ld)\n", write, read1, read2);
 	exit(EXIT_FAILURE);
 }
