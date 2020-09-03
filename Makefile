@@ -7,6 +7,12 @@ OBJS = zeromerge.o
 
 ifeq ($(OS), Windows_NT)
 	PROGRAM_NAME ?= zeromerge.exe
+        UNAME_S=$(shell uname -s)
+        ifeq ($(UNAME_S), MINGW32_NT-5.1)
+                OBJS += winres_xp.o
+        else
+                OBJS += winres.o
+        endif
 else
 	PROGRAM_NAME ?= zeromerge
 endif
@@ -25,6 +31,14 @@ $(PROGRAM_NAME): $(OBJS)
 
 stripped: $(PROGRAM_NAME)
 	strip $(PROGRAM_NAME)
+
+winres.o: winres.rc winres.manifest.xml
+	./tune_winres.sh
+	windres winres.rc winres.o
+
+winres_xp.o: winres_xp.rc
+	./tune_winres.sh
+	windres winres_xp.rc winres_xp.o
 
 install:
 	install -D -o root -g root -m 0755 -s $(PROGRAM_NAME) $$DESTDIR/usr/bin/$(PROGRAM_NAME)
