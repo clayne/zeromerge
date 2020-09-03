@@ -20,6 +20,7 @@
  #define FOPEN_W "wb"
 #endif /* ON_WINDOWS */
 
+char program_name[PATH_MAX + 4];
 
 /* Compare blocks and check for zero blocks
  *  0 = both blocks are identical
@@ -58,6 +59,13 @@ error_call:
 }
 
 
+static void usage(void)
+{
+	fprintf(stderr, "Usage: %s file1 file2 outfile\n", program_name);
+	return;
+}
+
+
 int main(int argc, char **argv)
 {
 	static char buf1[BSIZE], buf2[BSIZE];
@@ -65,6 +73,14 @@ int main(int argc, char **argv)
 	static struct stat stat1, stat2;
 	static off_t remain;
 	static off_t read1, read2, write;
+
+	strncpy(program_name, argv[0], PATH_MAX);
+
+	/* Help text if requested */
+	if (argc == 2 && (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help"))) {
+		usage();
+		exit(EXIT_SUCCESS);
+	}
 
 	if (argc != 4) goto error_argcount;
 
@@ -107,15 +123,13 @@ int main(int argc, char **argv)
 		remain -= read1;
 		if (feof(file1) && feof(file2)) break;
 	}
-
-	printf("File merge complete!\n");
 	exit(EXIT_SUCCESS);
 
 error_different:
 	fprintf(stderr, "Error: files contain different non-zero data\n");
 	exit(EXIT_FAILURE);
 error_argcount:
-	fprintf(stderr, "Usage: %s file1 file2 outfile\n", argv[0]);
+	usage();
 	exit(EXIT_FAILURE);
 error_file1:
 	fprintf(stderr, "Error opening/reading '%s'\n", argv[1]);
