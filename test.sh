@@ -18,4 +18,17 @@ if cmp -s test/correct_short.bin test_output.bin
 	else echo "FAILED"; ERR=1
 fi
 
+echo -n "Testing mismatch1: "
+if ! ./zeromerge test/missing1.bin test/mismatch.bin test_output.bin 2>/dev/null
+	then echo "PASSED"; ERR=0
+	else echo "FAILED"; ERR=1
+fi
+
+echo -n "Testing mismatch2: "
+if ! ./zeromerge test/missing1_short.bin test/mismatch_short.bin test_output.bin 2>/dev/null
+	then echo "PASSED"; ERR=0
+	else echo "FAILED"; ERR=1
+fi
+
+exit $ERR
 exit $ERR
