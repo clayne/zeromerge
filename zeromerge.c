@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 /* Block size to scan for merging */
 #define BSIZE 4096
@@ -61,6 +62,8 @@ int main(int argc, char **argv)
 {
 	static char buf1[BSIZE], buf2[BSIZE];
 	static FILE *file1, *file2, *file3;
+	static struct stat stat1, stat2;
+	static off_t remain;
 
 	if (argc != 3) goto error_argcount;
 
@@ -71,22 +74,41 @@ int main(int argc, char **argv)
 	file3 = fopen(argv[3], FOPEN_W);
 	if (!file3) goto error_file3;
 
-	fread(&buf1, BSIZE, 1, file1);
-	fread(&buf2, BSIZE, 1, file2);
+	if (stat(argv[1], &stat1) != 0) goto error_file1;
+	if (stat(argv[2], &stat2) != 0) goto error_file2;
+	if (stat1.st_size != stat2.st_size) goto error_file_sizes;
+	remain = stat1.st_size;
 
-	switch (compare_blocks(buf1, buf2, BSIZE)) {
-		default:
-		case -1:
-			goto error_different;
-			break;
-		case 0:
-			break;
-		case 1:
-			break;
-		case 2:
-			break;
+	/* Main loop */
+	while (remain > 0) {
+		off_t read1, read2, write;
+
+		read1 = (off_t)fread(&buf1, 1, BSIZE, file1);
+		read2 = (off_t)fread(&buf2, 1, BSIZE, file2);
+		if ((read1 != read2)) goto error_short_read;
+		if (ferror(file1)) goto error_file1;
+		if (ferror(file2)) goto error_file2;
+	
+		switch (compare_blocks(buf1, buf2, BSIZE)) {
+			default:
+			case -1:  /* -1 = blocks are non-zero and do not match */
+				goto error_different;
+				break;
+			case 0:  /*  0 = both blocks are identical */
+			case 2:  /*  2 = buf1 is non-zero and buf2 is zero */
+				write = (off_t)fwrite(&buf1, (size_t)read1, 1, file3);
+				if (write != read1) goto error_short_write;
+				break;
+			case 1:  /*  1 = buf1 is zero and buf2 is non-zero */
+				write = (off_t)fwrite(&buf2, (size_t)read2, 1, file3);
+				if (write != read2) goto error_short_write;
+				break;
+		}
+		remain -= read1;
+		if (feof(file1) && feof(file2)) break;
 	}
 
+	printf("File merge complete!\n");
 	exit(EXIT_SUCCESS);
 
 error_different:
@@ -103,5 +125,14 @@ error_file2:
 	exit(EXIT_FAILURE);
 error_file3:
 	fprintf(stderr, "Error opening/writing '%s'\n", argv[3]);
+	exit(EXIT_FAILURE);
+error_file_sizes:
+	fprintf(stderr, "Error: file sizes are not identical\n");
+	exit(EXIT_FAILURE);
+error_short_read:
+	fprintf(stderr, "Error: short read\n");
+	exit(EXIT_FAILURE);
+error_short_write:
+	fprintf(stderr, "Error: short write\n");
 	exit(EXIT_FAILURE);
 }
