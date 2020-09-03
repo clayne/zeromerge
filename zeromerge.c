@@ -123,7 +123,7 @@ int main(int argc, char **argv)
 		if (ferror(file1)) goto error_file1;
 		if (ferror(file2)) goto error_file2;
 	
-		switch (compare_blocks(buf1, buf2, read1)) {
+		switch (compare_blocks(buf1, buf2, (int)read1)) {
 			default:
 			case -1:  /* -1 = blocks are non-zero and do not match */
 				goto error_different;
@@ -165,6 +165,6 @@ error_short_read:
 	fprintf(stderr, "Error: short read\n");
 	exit(EXIT_FAILURE);
 error_short_write:
-	fprintf(stderr, "Error: short write (%ld != %ld or %ld)\n", write, read1, read2);
+	fprintf(stderr, "Error: short write (%lld != %lld or %lld)\n", write, read1, read2);
 	exit(EXIT_FAILURE);
 }
