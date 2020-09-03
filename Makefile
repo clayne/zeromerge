@@ -16,3 +16,5 @@ uninstall:
 clean:
 	rm -f zeromerge *~ *.o
 
+test: zeromerge
+	./test.sh
