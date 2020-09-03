@@ -3,14 +3,12 @@
  * Distributed under The MIT License
  */
 
-#define VER "1.0"
-#define VERDATE "2020-09-02"
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include "version.h"
 
 /* Block size to scan for merging */
 #define BSIZE 4096
@@ -64,7 +62,7 @@ error_call:
 
 static void version(void)
 {
-	printf("zeromerge version %s (%s) by Jody Bruchon <jody@jodybruchon.com>\n", VER, VERDATE);
+	printf("zeromerge %s (%s) by Jody Bruchon <jody@jodybruchon.com>\n", VER, VERDATE);
 	printf("Latest versions and support: https://github.com/jbruchon/zeromerge\n");
 	return;
 }
