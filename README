@@ -11,3 +11,6 @@ individual torrent is not fully seeded. For example, if a torrent stops at
 is available with that same block fully available, the two partial file
 downloads can be merged with this tool and force-rechecked to fill in the
 data gap and recover the full file.
+
+The program will abort if the file sizes differ or if any of the file data
+that mismatches is not all zeroes.

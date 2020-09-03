@@ -3,6 +3,9 @@
  * Distributed under The MIT License
  */
 
+#define VER "1.0"
+#define VERDATE "2020-09-02"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -59,9 +62,17 @@ error_call:
 }
 
 
+static void version(void)
+{
+	printf("zeromerge version %s (%s) by Jody Bruchon <jody@jodybruchon.com>\n", VER, VERDATE);
+	printf("Latest versions and support: https://github.com/jbruchon/zeromerge\n");
+	return;
+}
+
+
 static void usage(void)
 {
-	fprintf(stderr, "Usage: %s file1 file2 outfile\n", program_name);
+	printf("Usage: %s file1 file2 outfile\n", program_name);
 	return;
 }
 
@@ -77,9 +88,16 @@ int main(int argc, char **argv)
 	strncpy(program_name, argv[0], PATH_MAX);
 
 	/* Help text if requested */
-	if (argc == 2 && (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help"))) {
-		usage();
-		exit(EXIT_SUCCESS);
+	if (argc >= 2) {
+	       if ((!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help"))) {
+			version();
+			usage();
+			exit(EXIT_SUCCESS);
+		}
+	       if ((!strcmp(argv[1], "-v") || !strcmp(argv[1], "-V") || !strcmp(argv[1], "--version"))) {
+			version();
+			exit(EXIT_SUCCESS);
+		}
 	}
 
 	if (argc != 4) goto error_argcount;
