@@ -14,7 +14,7 @@ uninstall:
 	rm -f $$DESTDIR/usr/bin/zeromerge
 
 clean:
-	rm -f zeromerge *~ *.o
+	rm -f zeromerge *~ *.o test_output.bin
 
 test: zeromerge
 	./test.sh
