@@ -20,6 +20,7 @@
 /build_date.h
 /zeromerge
 /zeromerge*.exe
+test_output.bin
 /zeromerge-*-*/
 /zeromerge-*-*.zip
 /*.pkg.tar.xz
