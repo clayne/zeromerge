@@ -1,3 +1,8 @@
+zeromerge 1.0.1
+
+- Use larger (64K) read/write buffers instead of 4K implicit ones
+- Don't make output file until input size match check succeeds
+
 zeromerge 1.0
 
-* Initial working release
+- Initial working release
