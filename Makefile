@@ -46,13 +46,13 @@ install:
 uninstall:
 	rm -f $$DESTDIR/usr/bin/$(PROGRAM_NAME)
 
-test: FORCE
+test: zeromerge FORCE
 	./test.sh
 
-clean:
-	$(RM) $(OBJS) $(OBJS_CLEAN) $(PROGRAM_NAME) *~ *.gcno *.gcda *.gcov
+clean: FORCE
+	$(RM) $(OBJS) $(OBJS_CLEAN) $(PROGRAM_NAME) *~ *.gcno *.gcda *.gcov test_output.bin
 
-distclean: clean
+distclean: clean FORCE
 	$(RM) *.pkg.tar.*
 	$(RM) -r zeromerge-*-*/ zeromerge-*-*.zip
 
