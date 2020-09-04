@@ -83,7 +83,6 @@ int main(int argc, char **argv)
 {
 	static char buf1[READSIZE];
 	static char buf2[READSIZE];
-	static char buf3[READSIZE];
 	static FILE *file1, *file2, *file3;
 	static struct stat stat1, stat2;
 	static off_t remain;
@@ -145,15 +144,14 @@ int main(int argc, char **argv)
 					break;
 				case 0:  /*  0 = both blocks are identical */
 				case 2:  /*  2 = buf1 is non-zero and buf2 is zero */
-					memcpy(buf3 + i, buf1 + i, (size_t)j);
 					break;
 				case 1:  /*  1 = buf1 is zero and buf2 is non-zero */
-					memcpy(buf3 + i, buf2 + i, (size_t)j);
+					memcpy(buf1 + i, buf2 + i, (size_t)j);
 					break;
 			}
 			i += (j < BSIZE) ? j : BSIZE;
 		}
-		write = (off_t)fwrite(&buf3, 1, (size_t)read1, file3);
+		write = (off_t)fwrite(&buf1, 1, (size_t)read1, file3);
 		if (write != read1) goto error_short_write;
 		remain -= read1;
 		if (feof(file1) && feof(file2)) break;
