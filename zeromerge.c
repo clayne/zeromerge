@@ -25,7 +25,14 @@
  #define FOPEN_W "wb"
 #endif /* ON_WINDOWS */
 
-char program_name[PATH_MAX + 4];
+static char program_name[PATH_MAX + 4];
+static FILE *file1, *file2, *file3;
+
+void clean_exit(void)
+{
+	fclose(file1); fclose(file2); fclose(file3);
+	return;
+}
 
 /* Compare blocks and check for zero blocks
  *  0 = both blocks are identical
@@ -83,11 +90,11 @@ int main(int argc, char **argv)
 {
 	static char buf1[READSIZE];
 	static char buf2[READSIZE];
-	FILE *file1, *file2, *file3;
 	struct stat stat1, stat2;
 	off_t remain;
 	off_t read1, read2, write, i, j;
 
+	atexit(clean_exit);
 	strncpy(program_name, argv[0], PATH_MAX);
 
 	/* Help text if requested */
