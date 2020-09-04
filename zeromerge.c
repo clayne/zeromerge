@@ -15,7 +15,7 @@
 /* Block size to scan for merging */
 #define BSIZE 4096
 /* File read size */
-#define READSIZE 65536
+#define READSIZE 1048576
 
 #ifdef ON_WINDOWS
  #define FOPEN_R "rbS"
@@ -33,9 +33,9 @@ char program_name[PATH_MAX + 4];
  *  2 = buf1 is non-zero and buf2 is zero
  * -1 = blocks are non-zero and do not match
  * ^^^ This should be treated as a Bad Thing(tm) */
-int compare_blocks(const char * const restrict buf1, const char * const restrict buf2, int size)
+static int compare_blocks(const char * const restrict buf1, const char * const restrict buf2, int size)
 {
-	static int zero1, zero2;
+	int zero1, zero2;
 
 	if (!buf1 || !buf2 || size == 0) goto error_call;
 
@@ -83,10 +83,10 @@ int main(int argc, char **argv)
 {
 	static char buf1[READSIZE];
 	static char buf2[READSIZE];
-	static FILE *file1, *file2, *file3;
-	static struct stat stat1, stat2;
-	static off_t remain;
-	static off_t read1, read2, write, i, j;
+	FILE *file1, *file2, *file3;
+	struct stat stat1, stat2;
+	off_t remain;
+	off_t read1, read2, write, i, j;
 
 	strncpy(program_name, argv[0], PATH_MAX);
 
