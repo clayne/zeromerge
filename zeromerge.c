@@ -102,17 +102,21 @@ int main(int argc, char **argv)
 
 	if (argc != 4) goto error_argcount;
 
+	/* Open files to merge */
 	file1 = fopen(argv[1], FOPEN_R);
 	if (!file1) goto error_file1;
 	file2 = fopen(argv[2], FOPEN_R);
 	if (!file2) goto error_file2;
-	file3 = fopen(argv[3], FOPEN_W);
-	if (!file3) goto error_file3;
 
+	/* File sizes must match; sizes also needed for loop */
 	if (stat(argv[1], &stat1) != 0) goto error_file1;
 	if (stat(argv[2], &stat2) != 0) goto error_file2;
 	if (stat1.st_size != stat2.st_size) goto error_file_sizes;
 	remain = stat1.st_size;
+
+	/* If read and size check are OK, open file to write into */
+	file3 = fopen(argv[3], FOPEN_W);
+	if (!file3) goto error_file3;
 
 	/* Main loop */
 	while (remain > 0) {
