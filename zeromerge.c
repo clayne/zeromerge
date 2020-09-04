@@ -14,6 +14,8 @@
 
 /* Block size to scan for merging */
 #define BSIZE 4096
+/* File read size */
+#define READSIZE 65536
 
 #ifdef ON_WINDOWS
  #define FOPEN_R "rbS"
@@ -79,11 +81,13 @@ static void usage(void)
 
 int main(int argc, char **argv)
 {
-	static char buf1[BSIZE], buf2[BSIZE];
+	static char buf1[READSIZE];
+	static char buf2[READSIZE];
+	static char buf3[READSIZE];
 	static FILE *file1, *file2, *file3;
 	static struct stat stat1, stat2;
 	static off_t remain;
-	static off_t read1, read2, write;
+	static off_t read1, read2, write, i, j;
 
 	strncpy(program_name, argv[0], PATH_MAX);
 
@@ -121,32 +125,44 @@ int main(int argc, char **argv)
 	/* Main loop */
 	while (remain > 0) {
 
-		read1 = (off_t)fread(&buf1, 1, BSIZE, file1);
-		read2 = (off_t)fread(&buf2, 1, BSIZE, file2);
+		read1 = (off_t)fread(&buf1, 1, READSIZE, file1);
+		read2 = (off_t)fread(&buf2, 1, READSIZE, file2);
 		if ((read1 != read2)) goto error_short_read;
 		if (ferror(file1)) goto error_file1;
 		if (ferror(file2)) goto error_file2;
-	
-		switch (compare_blocks(buf1, buf2, (int)read1)) {
-			default:
-			case -1:  /* -1 = blocks are non-zero and do not match */
-				goto error_different;
-				break;
-			case 0:  /*  0 = both blocks are identical */
-			case 2:  /*  2 = buf1 is non-zero and buf2 is zero */
-				write = (off_t)fwrite(&buf1, 1, (size_t)read1, file3);
-				if (write != read1) goto error_short_write;
-				break;
-			case 1:  /*  1 = buf1 is zero and buf2 is non-zero */
-				write = (off_t)fwrite(&buf2, 1, (size_t)read2, file3);
-				if (write != read2) goto error_short_write;
-				break;
+
+		/* Consume READSIZE buffer in BSIZE blocks until exhausted */
+		i = 0;
+		while (i < read1) {
+			/* Limit operations to BSIZE or less */
+			j = read1 - i;
+			if (j < 0) goto error_underflow;
+			if (j >= BSIZE) j = BSIZE;
+			switch (compare_blocks(buf1 + i, buf2 + i, (int)j)) {
+				default:
+				case -1:  /* -1 = blocks are non-zero and do not match */
+					goto error_different;
+					break;
+				case 0:  /*  0 = both blocks are identical */
+				case 2:  /*  2 = buf1 is non-zero and buf2 is zero */
+					memcpy(buf3 + i, buf1 + i, (size_t)j);
+					break;
+				case 1:  /*  1 = buf1 is zero and buf2 is non-zero */
+					memcpy(buf3 + i, buf2 + i, (size_t)j);
+					break;
+			}
+			i += (j < BSIZE) ? j : BSIZE;
 		}
+		write = (off_t)fwrite(&buf3, 1, (size_t)read1, file3);
+		if (write != read1) goto error_short_write;
 		remain -= read1;
 		if (feof(file1) && feof(file2)) break;
 	}
 	exit(EXIT_SUCCESS);
 
+error_underflow:
+	fprintf(stderr, "Error: index underflow (please report this as a bug)\n");
+	exit(EXIT_FAILURE);
 error_different:
 	fprintf(stderr, "Error: files contain different non-zero data\n");
 	exit(EXIT_FAILURE);
