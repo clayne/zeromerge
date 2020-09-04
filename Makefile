@@ -46,7 +46,7 @@ install:
 uninstall:
 	rm -f $$DESTDIR/usr/bin/$(PROGRAM_NAME)
 
-test: zeromerge
+test: FORCE
 	./test.sh
 
 clean:
@@ -60,3 +60,6 @@ chrootpackage:
 	+./chroot_build.sh
 package:
 	+./generate_packages.sh
+
+FORCE:
+
