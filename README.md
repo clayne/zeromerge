@@ -6,6 +6,8 @@ Author: Jody Bruchon <jody@jodybruchon.com>
 
 License: The MIT License _(see LICENSE file for details)_
 
+Copyright (C) 2020 Jody Bruchon and contributors
+
 This program merges two files that are supposed to be identical but have
 missing data in one or both files that manifests as zeroed blocks. This
 is commonly seen when the same file exists in multiple torrents but each
