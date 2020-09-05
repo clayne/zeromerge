@@ -34,43 +34,6 @@ void clean_exit(void)
 	return;
 }
 
-/* Compare blocks and check for zero blocks
- *  0 = both blocks are identical
- *  1 = buf1 is zero and buf2 is non-zero
- *  2 = buf1 is non-zero and buf2 is zero
- * -1 = blocks are non-zero and do not match
- * ^^^ This should be treated as a Bad Thing(tm) */
-static int compare_blocks(const char * const restrict buf1, const char * const restrict buf2, int size)
-{
-	int zero1, zero2;
-
-	if (!buf1 || !buf2 || size == 0) goto error_call;
-
-	zero1 = 0; zero2 = 0;
-	for (int len = 0; len < size; len++) {
-		char c1, c2;
-		c1 = *(buf1 + len);
-		c2 = *(buf2 + len);
-		/* Mark block non-zero if needed */
-		if (c1 != '\0') zero1 = 1;
-		if (c2 != '\0') zero2 = 1;
-		/* Make sure the blocks are identical */
-		if (c1 == c2) continue;
-		/* Do both blocks contain different non-zero data? */
-		if (zero1 & zero2) return -1;
-		/* Blocks are different but one is zero so far - loop */
-		continue;
-	}
-	/* Loop completed; check what blocks are zero or not */
-	if (zero1 == 0 && zero2 == 1) return 1;
-	if (zero1 == 1 && zero2 == 0) return 2;
-	return 0;
-error_call:
-	fprintf(stderr, "compare_blocks(): bad parameter passed, aborting\n");
-	exit(EXIT_FAILURE);
-}
-
-
 static void version(void)
 {
 	printf("zeromerge %s (%s) by Jody Bruchon <jody@jodybruchon.com>\n", VER, VERDATE);
@@ -92,7 +55,7 @@ int main(int argc, char **argv)
 	static char buf2[READSIZE];
 	struct stat stat1, stat2;
 	off_t remain;
-	off_t read1, read2, write, i, j;
+	off_t read1, read2, write;
 
 	atexit(clean_exit);
 	strncpy(program_name, argv[0], PATH_MAX);
@@ -137,37 +100,21 @@ int main(int argc, char **argv)
 		if (ferror(file1)) goto error_file1;
 		if (ferror(file2)) goto error_file2;
 
-		/* Consume READSIZE buffer in BSIZE blocks until exhausted */
-		i = 0;
-		while (i < read1) {
-			/* Limit operations to BSIZE or less */
-			j = read1 - i;
-			if (j < 0) goto error_underflow;
-			if (j >= BSIZE) j = BSIZE;
-			switch (compare_blocks(buf1 + i, buf2 + i, (int)j)) {
-				default:
-				case -1:  /* -1 = blocks are non-zero and do not match */
-					goto error_different;
-					break;
-				case 0:  /*  0 = both blocks are identical */
-				case 2:  /*  2 = buf1 is non-zero and buf2 is zero */
-					break;
-				case 1:  /*  1 = buf1 is zero and buf2 is non-zero */
-					memcpy(buf1 + i, buf2 + i, (size_t)j);
-					break;
-			}
-			i += (j < BSIZE) ? j : BSIZE;
+		/* Merge data from last block to first block */
+		while (read1--) {
+			/* if blocks are non-zero and do not match, exit with error*/
+			if (buf1[read1] != buf2[read1] && buf1[read1] != 0 && buf2[read1] != 0)
+				goto error_different;
+			/* merge data into buf1*/
+			buf1[read1] |= buf2[read1];
 		}
-		write = (off_t)fwrite(&buf1, 1, (size_t)read1, file3);
-		if (write != read1) goto error_short_write;
-		remain -= read1;
+		write = (off_t)fwrite(&buf1, 1, (size_t)read2, file3);
+		if (write != read2) goto error_short_write;
+		remain -= read2;
 		if (feof(file1) && feof(file2)) break;
 	}
 	exit(EXIT_SUCCESS);
 
-error_underflow:
-	fprintf(stderr, "Error: index underflow (please report this as a bug)\n");
-	exit(EXIT_FAILURE);
 error_different:
 	fprintf(stderr, "Error: files contain different non-zero data\n");
 	exit(EXIT_FAILURE);
