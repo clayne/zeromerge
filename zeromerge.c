@@ -3,13 +3,16 @@
  * Distributed under The MIT License
  */
 
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/stat.h>
 #include <limits.h>
+
+#include "jody_win_unicode.h"
+#include "oom.h"
 #include "version.h"
 
 /* Block size to scan for merging */
@@ -25,8 +28,47 @@
  #define FOPEN_W "wb"
 #endif /* ON_WINDOWS */
 
+/* Detect Windows and modify as needed */
+#if defined _WIN32 || defined __CYGWIN__
+ #ifndef ON_WINDOWS
+  #define ON_WINDOWS 1
+ #endif
+ #define NO_SYMLINKS 1
+ #define NO_PERMS 1
+ #define NO_SIGACTION 1
+ #ifndef WIN32_LEAN_AND_MEAN
+  #define WIN32_LEAN_AND_MEAN
+ #endif
+ #include <windows.h>
+ #include <io.h>
+ #include "win_stat.h"
+ #define STAT win_stat
+// const char dir_sep = '\\';
+ #ifdef UNICODE
+  const wchar_t *FILE_MODE_RO = L"rbS";
+ #else
+  const char *FILE_MODE_RO = "rbS";
+ #endif /* UNICODE */
+
+#else /* Not Windows */
+ #define STAT stat
+ const char *FILE_MODE_RO = "rb";
+// const char dir_sep = '/';
+ #ifdef UNICODE
+  #error Do not define UNICODE on non-Windows platforms.
+  #undef UNICODE
+ #endif
+#endif /* _WIN32 || __CYGWIN__ */
+
+/* Windows + Unicode compilation */
+#ifdef UNICODE
+int out_mode = _O_TEXT;
+int err_mode = _O_TEXT;
+#endif /* UNICODE */
+
 static char program_name[PATH_MAX + 4];
 static FILE *file1, *file2, *file3;
+
 
 void clean_exit(void)
 {
@@ -35,6 +77,7 @@ void clean_exit(void)
 	if (file3) fclose(file3);
 	return;
 }
+
 
 static void version(void)
 {
@@ -51,25 +94,55 @@ static void usage(void)
 }
 
 
+#ifdef UNICODE
+int wmain(int argc, wchar_t **wargv)
+#else
 int main(int argc, char **argv)
+#endif
 {
 	static char buf1[READSIZE];
 	static char buf2[READSIZE];
+#ifdef ON_WINDOWS
+	struct winstat stat1, stat2;
+#else
 	struct stat stat1, stat2;
+#endif
 	off_t remain;
 	off_t read1, read2, write;
 
 	atexit(clean_exit);
+
+#ifdef ON_WINDOWS
+	/* Windows buffers our stderr output; don't let it do that */
+	if (setvbuf(stderr, NULL, _IONBF, 0) != 0)
+		fprintf(stderr, "warning: setvbuf() failed\n");
+#endif
+
+#ifdef UNICODE
+	/* Create a UTF-8 **argv from the wide version */
+	static char **argv;
+	argv = (char **)malloc(sizeof(char *) * (size_t)argc);
+	if (!argv) oom("main() unicode argv");
+	widearg_to_argv(argc, wargv, argv);
+	/* fix up __argv so getopt etc. don't crash */
+	__argv = argv;
+	/* Only use UTF-16 for terminal output, else use UTF-8 */
+	if (!_isatty(_fileno(stdout))) out_mode = _O_BINARY;
+	else out_mode = _O_U16TEXT;
+	if (!_isatty(_fileno(stderr))) err_mode = _O_BINARY;
+	else err_mode = _O_U16TEXT;
+#endif /* UNICODE */
+
 	strncpy(program_name, argv[0], PATH_MAX);
 
 	/* Help text if requested */
 	if (argc >= 2) {
-	       if ((!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help"))) {
+		if ((!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help"))) {
 			version();
 			usage();
 			exit(EXIT_SUCCESS);
 		}
-	       if ((!strcmp(argv[1], "-v") || !strcmp(argv[1], "-V") || !strcmp(argv[1], "--version"))) {
+		if ((!strcmp(argv[1], "-v") || !strcmp(argv[1], "-V") || !strcmp(argv[1], "--version"))) {
 			version();
 			exit(EXIT_SUCCESS);
 		}
@@ -84,8 +157,8 @@ int main(int argc, char **argv)
 	if (!file2) goto error_file2;
 
 	/* File sizes must match; sizes also needed for loop */
-	if (stat(argv[1], &stat1) != 0) goto error_file1;
-	if (stat(argv[2], &stat2) != 0) goto error_file2;
+	if (STAT(argv[1], &stat1) != 0) goto error_file1;
+	if (STAT(argv[2], &stat2) != 0) goto error_file2;
 	if (stat1.st_size != stat2.st_size) goto error_file_sizes;
 	remain = stat1.st_size;
 
