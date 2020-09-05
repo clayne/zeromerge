@@ -45,6 +45,7 @@
  #endif /* UNICODE */
 
 #else /* Not Windows */
+ #include <sys/stat.h>
  #define STAT stat
  const char *FOPEN_R = "rb";
  const char *FOPEN_W = "wb";
