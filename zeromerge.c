@@ -30,7 +30,9 @@ static FILE *file1, *file2, *file3;
 
 void clean_exit(void)
 {
-	fclose(file1); fclose(file2); fclose(file3);
+	if (file1) fclose(file1);
+	if (file2) fclose(file2);
+	if (file3) fclose(file3);
 	return;
 }
 
