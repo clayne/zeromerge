@@ -20,14 +20,6 @@
 /* File read size */
 #define READSIZE 1048576
 
-#ifdef ON_WINDOWS
- #define FOPEN_R "rbS"
- #define FOPEN_W "wbS"
-#else
- #define FOPEN_R "rb"
- #define FOPEN_W "wb"
-#endif /* ON_WINDOWS */
-
 /* Detect Windows and modify as needed */
 #if defined _WIN32 || defined __CYGWIN__
  #ifndef ON_WINDOWS
@@ -45,14 +37,17 @@
  #define STAT win_stat
 // const char dir_sep = '\\';
  #ifdef UNICODE
-  const wchar_t *FILE_MODE_RO = L"rbS";
+  const wchar_t *FOPEN_R = L"rbS";
+  const wchar_t *FOPEN_W = L"wbS";
  #else
-  const char *FILE_MODE_RO = "rbS";
+  const char *FOPEN_R = "rbS";
+  const char *FOPEN_W = "wbS";
  #endif /* UNICODE */
 
 #else /* Not Windows */
  #define STAT stat
- const char *FILE_MODE_RO = "rb";
+ const char *FOPEN_R = "rb";
+ const char *FOPEN_W = "wb";
 // const char dir_sep = '/';
  #ifdef UNICODE
   #error Do not define UNICODE on non-Windows platforms.
@@ -151,9 +146,17 @@ int main(int argc, char **argv)
 	if (argc != 4) goto error_argcount;
 
 	/* Open files to merge */
+#ifdef UNICODE
+	file1 = _wfopen(wargv[1], FOPEN_R);
+#else
 	file1 = fopen(argv[1], FOPEN_R);
+#endif
 	if (!file1) goto error_file1;
+#ifdef UNICODE
+	file2 = _wfopen(wargv[2], FOPEN_R);
+#else
 	file2 = fopen(argv[2], FOPEN_R);
+#endif
 	if (!file2) goto error_file2;
 
 	/* File sizes must match; sizes also needed for loop */
@@ -163,7 +166,11 @@ int main(int argc, char **argv)
 	remain = stat1.st_size;
 
 	/* If read and size check are OK, open file to write into */
+#ifdef UNICODE
+	file3 = _wfopen(wargv[3], FOPEN_W);
+#else
 	file3 = fopen(argv[3], FOPEN_W);
+#endif
 	if (!file3) goto error_file3;
 
 	/* Main loop */

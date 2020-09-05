@@ -34,5 +34,12 @@ if ! $PROG test/missing1_short.bin test/mismatch_short.bin test_output.bin 2>/de
 	else echo "FAILED"; ERR=1
 fi
 
+echo -n "Testing UnicodeNm: "
+$PROG test/ちゅくちゅく１.bin test/ちゅくちゅく２.bin test_output.bin
+if cmp -s test/万斉.bin test_output.bin 
+	then echo "PASSED"; ERR=0
+	else echo "FAILED"; ERR=1
+fi
+
 exit $ERR
 exit $ERR
