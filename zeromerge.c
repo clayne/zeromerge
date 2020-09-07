@@ -78,7 +78,10 @@ void clean_exit(void)
 static void version(void)
 {
 	printf("zeromerge %s (%s) by Jody Bruchon <jody@jodybruchon.com>\n", VER, VERDATE);
-	printf("Latest versions and support: https://github.com/jbruchon/zeromerge\n");
+	printf("\nLatest versions and support:\n");
+	printf("        https://github.com/jbruchon/zeromerge\n");
+	printf("\nPlease consider supporting continued development:\n");
+	printf("        https://github.com/jbruchon/zeromerge\n\n");
 	return;
 }
 
@@ -134,7 +137,6 @@ int main(int argc, char **argv)
 	/* Help text if requested */
 	if (argc >= 2) {
 		if ((!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help"))) {
-			version();
 			usage();
 			exit(EXIT_SUCCESS);
 		}
