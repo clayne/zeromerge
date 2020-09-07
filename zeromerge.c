@@ -15,8 +15,6 @@
 #include "oom.h"
 #include "version.h"
 
-/* Block size to scan for merging */
-#define BSIZE 4096
 /* File read size */
 #define READSIZE 1048576
 
@@ -185,9 +183,10 @@ int main(int argc, char **argv)
 		if (ferror(file1)) goto error_file1;
 		if (ferror(file2)) goto error_file2;
 
-		/* Merge data from last block to first block */
-		while (read1--) {
-			/* if blocks are non-zero and do not match, exit with error*/
+		/* Merge data between buffers */
+		read1 = 0;
+		while (read1++ < read2) {
+			/* Error if both bytes are non-zero and different */
 			if (buf1[read1] != buf2[read1] && buf1[read1] != 0 && buf2[read1] != 0)
 				goto error_different;
 			/* merge data into buf1*/

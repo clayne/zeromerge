@@ -15,7 +15,7 @@ if cmp -s test/correct.bin test_output.bin
 	else echo "FAILED"; ERR=1
 fi
 
-echo -n "Testing 4K w/tail: "
+echo -n "Testing 4K + tail: "
 $PROG test/missing1_short.bin test/missing2_short.bin test_output.bin
 if cmp -s test/correct_short.bin test_output.bin
 	then echo "PASSED"; ERR=0
