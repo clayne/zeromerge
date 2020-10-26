@@ -209,7 +209,7 @@ int main(int argc, char **argv)
 		gettimeofday(&time1, NULL);
 		if (time2.tv_sec < time1.tv_sec) {
 			progress = stat1.st_size - remain;
-			fprintf(stderr, "\r[zeromerge] Progress: %lld%%, %lld of %lld MiB (%lld MiB/sec)",
+			printf("\r[zeromerge] Progress: %lld%%, %lld of %lld MiB (%lld MiB/sec)",
 					(progress * 100) / stat1.st_size,
 					progress >> 20,
 					stat1.st_size >> 20,
@@ -219,7 +219,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-	fprintf(stderr, "\n[zeromerge] merge complete.");
+	printf("\n[zeromerge] merge complete.");
 	exit(EXIT_SUCCESS);
 
 error_different:
