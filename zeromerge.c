@@ -10,6 +10,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <limits.h>
+#include <time.h>
+#include <sys/time.h>
 
 #include "jody_win_unicode.h"
 #include "oom.h"
@@ -106,6 +108,7 @@ int main(int argc, char **argv)
 #endif
 	off_t remain;
 	off_t read1, read2, write;
+	struct timeval time1, time2;
 
 	atexit(clean_exit);
 
@@ -174,9 +177,12 @@ int main(int argc, char **argv)
 #endif
 	if (!file3) goto error_file3;
 
+	/* Set up progress indicator */
+	gettimeofday(&time1, NULL);
+	time2.tv_sec = time1.tv_sec;
+
 	/* Main loop */
 	while (remain > 0) {
-
 		read1 = (off_t)fread(&buf1, 1, READSIZE, file1);
 		read2 = (off_t)fread(&buf2, 1, READSIZE, file2);
 		if ((read1 != read2)) goto error_short_read;
@@ -196,31 +202,43 @@ int main(int argc, char **argv)
 		if (write != read2) goto error_short_write;
 		remain -= read2;
 		if (feof(file1) && feof(file2)) break;
+
+		/* Progress indicator */
+		gettimeofday(&time1, NULL);
+		if (time2.tv_sec < time1.tv_sec) {
+			fprintf(stderr, "\rProgress: %lld%% (%lld/%lld MiB)\n",
+					(stat1.st_size - remain) / stat1.st_size,
+					remain >> 20,
+					stat1.st_size >> 20);
+			time2.tv_sec = time1.tv_sec;
+		}
 	}
+
+	fprintf(stderr, "\rProgress: done!                                 \n");
 	exit(EXIT_SUCCESS);
 
 error_different:
-	fprintf(stderr, "Error: files contain different non-zero data\n");
+	fprintf(stderr, "\nError: files contain different non-zero data\n");
 	exit(EXIT_FAILURE);
 error_argcount:
 	usage();
 	exit(EXIT_FAILURE);
 error_file1:
-	fprintf(stderr, "Error opening/reading '%s'\n", argv[1]);
+	fprintf(stderr, "\nError opening/reading '%s'\n", argv[1]);
 	exit(EXIT_FAILURE);
 error_file2:
-	fprintf(stderr, "Error opening/reading '%s'\n", argv[2]);
+	fprintf(stderr, "\nError opening/reading '%s'\n", argv[2]);
 	exit(EXIT_FAILURE);
 error_file3:
-	fprintf(stderr, "Error opening/writing '%s'\n", argv[3]);
+	fprintf(stderr, "\nError opening/writing '%s'\n", argv[3]);
 	exit(EXIT_FAILURE);
 error_file_sizes:
-	fprintf(stderr, "Error: file sizes are not identical\n");
+	fprintf(stderr, "\nError: file sizes are not identical\n");
 	exit(EXIT_FAILURE);
 error_short_read:
-	fprintf(stderr, "Error: short read\n");
+	fprintf(stderr, "\nError: short read\n");
 	exit(EXIT_FAILURE);
 error_short_write:
-	fprintf(stderr, "Error: short write (%ld != %ld or %ld)\n", (long)write, (long)read1, (long)read2);
+	fprintf(stderr, "\nError: short write (%ld != %ld or %ld)\n", (long)write, (long)read1, (long)read2);
 	exit(EXIT_FAILURE);
 }
