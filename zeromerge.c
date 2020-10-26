@@ -167,6 +167,7 @@ int main(int argc, char **argv)
 	if (STAT(argv[1], &stat1) != 0) goto error_file1;
 	if (STAT(argv[2], &stat2) != 0) goto error_file2;
 	if (stat1.st_size != stat2.st_size) goto error_file_sizes;
+	if (stat1.st_size == 0) goto error_empty_file;
 	remain = stat1.st_size;
 
 	/* If read and size check are OK, open file to write into */
@@ -183,6 +184,8 @@ int main(int argc, char **argv)
 
 	/* Main loop */
 	while (remain > 0) {
+		off_t progress, lastprogress = 0;
+
 		read1 = (off_t)fread(&buf1, 1, READSIZE, file1);
 		read2 = (off_t)fread(&buf2, 1, READSIZE, file2);
 		if ((read1 != read2)) goto error_short_read;
@@ -205,15 +208,18 @@ int main(int argc, char **argv)
 		/* Progress indicator */
 		gettimeofday(&time1, NULL);
 		if (time2.tv_sec < time1.tv_sec) {
-			fprintf(stderr, "\rProgress: %lld%% (%lld/%lld MiB)\n",
-					(stat1.st_size - remain) / stat1.st_size,
-					remain >> 20,
-					stat1.st_size >> 20);
+			progress = stat1.st_size - remain;
+			fprintf(stderr, "\r[zeromerge] Progress: %lld%%, %lld of %lld MiB (%lld MiB/sec)",
+					(progress * 100) / stat1.st_size,
+					progress >> 20,
+					stat1.st_size >> 20,
+					(progress - lastprogress) >> 20);
 			time2.tv_sec = time1.tv_sec;
+			lastprogress = progress;
 		}
 	}
 
-	fprintf(stderr, "\rProgress: done!                                 \n");
+	fprintf(stderr, "\n[zeromerge] merge complete.");
 	exit(EXIT_SUCCESS);
 
 error_different:
@@ -239,5 +245,8 @@ error_short_read:
 	exit(EXIT_FAILURE);
 error_short_write:
 	fprintf(stderr, "\nError: short write (%ld != %ld or %ld)\n", (long)write, (long)read1, (long)read2);
+	exit(EXIT_FAILURE);
+error_empty_file:
+	fprintf(stderr, "\nError: cannot merge files that are 0 bytes in size\n");
 	exit(EXIT_FAILURE);
 }
