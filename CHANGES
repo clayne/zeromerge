@@ -1,3 +1,9 @@
+zeromerge 1.1
+
+- Support Unicode file names on Windows
+- Add a progress indicator with percent done, size merged, and merge speed
+- Numerous performance improvements
+
 zeromerge 1.0.1
 
 - Use larger (64K) read/write buffers instead of 4K implicit ones
