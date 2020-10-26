@@ -190,8 +190,7 @@ int main(int argc, char **argv)
 		if (ferror(file2)) goto error_file2;
 
 		/* Merge data between buffers */
-		read1 = 0;
-		while (read1++ < read2) {
+		for (read1 = 0; read1 < read2; read1++) {
 			/* Error if both bytes are non-zero and different */
 			if (buf1[read1] != buf2[read1] && buf1[read1] != 0 && buf2[read1] != 0)
 				goto error_different;
