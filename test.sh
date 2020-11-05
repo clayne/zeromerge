@@ -5,38 +5,41 @@
 ERR=0
 
 PROG="./zeromerge"
+OUT=test_output.bin
 
 ! $PROG -v && echo "Compile the program first" && exit 1
 
+rm -f "$OUT"
+
 echo -n "Testing 4K blocks: "
-$PROG test/missing1.bin test/missing2.bin test_output.bin >/dev/null
-if cmp -s test/correct.bin test_output.bin 
+$PROG test/missing1.bin test/missing2.bin $OUT >/dev/null
+if cmp -s test/correct.bin $OUT 
 	then echo "PASSED"; ERR=0
 	else echo "FAILED"; ERR=1
 fi
 
 echo -n "Testing 4K + tail: "
-$PROG test/missing1_short.bin test/missing2_short.bin test_output.bin >/dev/null
-if cmp -s test/correct_short.bin test_output.bin
+$PROG test/missing1_short.bin test/missing2_short.bin $OUT >/dev/null
+if cmp -s test/correct_short.bin $OUT
 	then echo "PASSED"; ERR=0
 	else echo "FAILED"; ERR=1
 fi
 
 echo -n "Testing mismatch1: "
-if ! $PROG test/missing1.bin test/mismatch.bin test_output.bin 2>/dev/null >/dev/null
+if ! $PROG test/missing1.bin test/mismatch.bin $OUT 2>/dev/null >/dev/null
 	then echo "PASSED"; ERR=0
 	else echo "FAILED"; ERR=1
 fi
 
 echo -n "Testing mismatch2: "
-if ! $PROG test/missing1_short.bin test/mismatch_short.bin test_output.bin >/dev/null 2>/dev/null
+if ! $PROG test/missing1_short.bin test/mismatch_short.bin $OUT >/dev/null 2>/dev/null
 	then echo "PASSED"; ERR=0
 	else echo "FAILED"; ERR=1
 fi
 
 echo -n "Testing UnicodeNm: "
-$PROG test/ちゅくちゅく１.bin test/ちゅくちゅく２.bin test_output.bin >/dev/null
-if cmp -s test/万斉.bin test_output.bin 
+$PROG test/ちゅくちゅく１.bin test/ちゅくちゅく２.bin $OUT >/dev/null
+if cmp -s test/万斉.bin $OUT 
 	then echo "PASSED"; ERR=0
 	else echo "FAILED"; ERR=1
 fi
