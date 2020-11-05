@@ -58,19 +58,19 @@
 
 /* Windows + Unicode compilation */
 #ifdef UNICODE
-int out_mode = _O_TEXT;
-int err_mode = _O_TEXT;
+ int out_mode = _O_TEXT;
+ int err_mode = _O_TEXT;
 #endif /* UNICODE */
 
 static char program_name[PATH_MAX + 4];
-static FILE *file1, *file2, *file3;
+static FILE *fp1, *fp2, *fp3;
 
 
 void clean_exit(void)
 {
-	if (file1) fclose(file1);
-	if (file2) fclose(file2);
-	if (file3) fclose(file3);
+	if (fp1) fclose(fp1);
+	if (fp2) fclose(fp2);
+	if (fp3) fclose(fp3);
 	return;
 }
 
@@ -81,7 +81,7 @@ static void version(void)
 	printf("\nLatest versions and support:\n");
 	printf("        https://github.com/jbruchon/zeromerge\n");
 	printf("\nPlease consider supporting continued development:\n");
-	printf("        https://github.com/jbruchon/zeromerge\n\n");
+	printf("        https://www.SubscribeStar.com/JodyBruchon\n\n");
 	return;
 }
 
@@ -101,8 +101,13 @@ int main(int argc, char **argv)
 {
 	static char buf1[READSIZE];
 	static char buf2[READSIZE];
+	static char *file1, *file2, *file3;
 #ifdef ON_WINDOWS
 	struct winstat stat1, stat2;
+ #ifdef UNICODE
+	/* For Unicode conversions (_wfopen) */
+	static wchar_t wname[WPATH_MAX];
+ #endif
 #else
 	struct stat stat1, stat2;
 #endif
@@ -149,19 +154,21 @@ int main(int argc, char **argv)
 
 	if (argc != 4) goto error_argcount;
 
+	/* Set up file names to open */
+	file1 = argv[1]; file2 = argv[2]; file3 = argv[3];
+
 	/* Open files to merge */
 #ifdef UNICODE
-	file1 = _wfopen(wargv[1], FOPEN_R);
+	M2W(file1, wname);
+	fp1 = _wfopen(wname, FOPEN_R);
+	M2W(file2, wname);
+	fp2 = _wfopen(wname, FOPEN_R);
 #else
-	file1 = fopen(argv[1], FOPEN_R);
-#endif
-	if (!file1) goto error_file1;
-#ifdef UNICODE
-	file2 = _wfopen(wargv[2], FOPEN_R);
-#else
-	file2 = fopen(argv[2], FOPEN_R);
-#endif
-	if (!file2) goto error_file2;
+	fp1 = fopen(file1, FOPEN_R);
+	fp2 = fopen(file2, FOPEN_R);
+#endif /* UNICODE */
+	if (!fp1) goto error_file1;
+	if (!fp2) goto error_file2;
 
 	/* File sizes must match; sizes also needed for loop */
 	if (STAT(argv[1], &stat1) != 0) goto error_file1;
@@ -172,11 +179,12 @@ int main(int argc, char **argv)
 
 	/* If read and size check are OK, open file to write into */
 #ifdef UNICODE
-	file3 = _wfopen(wargv[3], FOPEN_W);
+	M2W(file3, wname);
+	fp3 = _wfopen(wname, FOPEN_W);
 #else
-	file3 = fopen(argv[3], FOPEN_W);
-#endif
-	if (!file3) goto error_file3;
+	fp3 = fopen(file3, FOPEN_W);
+#endif /* UNICODE */
+	if (!fp3) goto error_file3;
 
 	/* Set up progress indicator */
 	gettimeofday(&time1, NULL);
@@ -186,11 +194,11 @@ int main(int argc, char **argv)
 	while (remain > 0) {
 		off_t progress, lastprogress = 0;
 
-		read1 = (off_t)fread(&buf1, 1, READSIZE, file1);
-		read2 = (off_t)fread(&buf2, 1, READSIZE, file2);
+		read1 = (off_t)fread(&buf1, 1, READSIZE, fp1);
+		read2 = (off_t)fread(&buf2, 1, READSIZE, fp2);
 		if ((read1 != read2)) goto error_short_read;
-		if (ferror(file1)) goto error_file1;
-		if (ferror(file2)) goto error_file2;
+		if (ferror(fp1)) goto error_file1;
+		if (ferror(fp2)) goto error_file2;
 
 		/* Merge data between buffers */
 		for (read1 = 0; read1 < read2; read1++) {
@@ -200,10 +208,10 @@ int main(int argc, char **argv)
 			/* merge data into buf1*/
 			buf1[read1] |= buf2[read1];
 		}
-		write = (off_t)fwrite(&buf1, 1, (size_t)read2, file3);
+		write = (off_t)fwrite(&buf1, 1, (size_t)read2, fp3);
 		if (write != read2) goto error_short_write;
 		remain -= read2;
-		if (feof(file1) && feof(file2)) break;
+		if (feof(fp1) && feof(fp2)) break;
 
 		/* Progress indicator */
 		gettimeofday(&time1, NULL);
@@ -229,22 +237,24 @@ error_argcount:
 	usage();
 	exit(EXIT_FAILURE);
 error_file1:
-	fprintf(stderr, "\nError opening/reading '%s'\n", argv[1]);
+	fprintf(stderr, "\nError opening/reading "); fwprint(stderr, file1, 1);
 	exit(EXIT_FAILURE);
 error_file2:
-	fprintf(stderr, "\nError opening/reading '%s'\n", argv[2]);
+	fprintf(stderr, "\nError opening/reading "); fwprint(stderr, file2, 1);
 	exit(EXIT_FAILURE);
 error_file3:
-	fprintf(stderr, "\nError opening/writing '%s'\n", argv[3]);
+	fprintf(stderr, "\nError opening/reading "); fwprint(stderr, file3, 1);
 	exit(EXIT_FAILURE);
 error_file_sizes:
 	fprintf(stderr, "\nError: file sizes are not identical\n");
 	exit(EXIT_FAILURE);
 error_short_read:
-	fprintf(stderr, "\nError: short read\n");
+	fprintf(stderr, "\nError: short read: file 1 %s, file2 %s\n",
+			strerror(ferror(fp1)), strerror(ferror(fp2)));
 	exit(EXIT_FAILURE);
 error_short_write:
-	fprintf(stderr, "\nError: short write (%ld != %ld or %ld)\n", (long)write, (long)read1, (long)read2);
+	fprintf(stderr, "\nError: short write (%ld != %ld or %ld): %s\n",
+			(long)write, (long)read1, (long)read2, strerror(ferror(fp3)));
 	exit(EXIT_FAILURE);
 error_empty_file:
 	fprintf(stderr, "\nError: cannot merge files that are 0 bytes in size\n");
