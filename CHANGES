@@ -1,3 +1,9 @@
+zeromerge 1.1.2
+
+- Numerous progress indication fixes and improvements
+- Progress output is now more friendly when output isn't to a TTY
+- Raised buffer sizes from 1 MiB to 4 MiB for ~42% higher throughput
+
 zeromerge 1.1.1
 
 - Improve Unicode error messages
