@@ -46,7 +46,7 @@ fi
 
 echo -n "Testing HardLinked: "
 ln -f test/missing1.bin test/hard_linked.bin || echo "ERROR: can't create hard link!"
-if ! $PROG test/missing1.bin test/hard_linked.bin $OUT #>/dev/null 2>/dev/null
+if ! $PROG test/missing1.bin test/hard_linked.bin $OUT >/dev/null 2>/dev/null
 	then echo "PASSED"; ERR=0
 	else echo "FAILED"; ERR=1
 fi
