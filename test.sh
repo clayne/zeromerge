@@ -13,7 +13,7 @@ rm -f "$OUT"
 
 echo -n "Testing 4K blocks: "
 $PROG test/missing1.bin test/missing2.bin $OUT >/dev/null
-if cmp -s test/correct.bin $OUT 
+if cmp -s test/correct.bin $OUT
 	then echo "PASSED"; ERR=0
 	else echo "FAILED"; ERR=1
 fi
@@ -39,7 +39,7 @@ fi
 
 echo -n "Testing UnicodeNm: "
 $PROG test/ちゅくちゅく１.bin test/ちゅくちゅく２.bin $OUT >/dev/null
-if cmp -s test/万斉.bin $OUT 
+if cmp -s test/万斉.bin $OUT
 	then echo "PASSED"; ERR=0
 	else echo "FAILED"; ERR=1
 fi
