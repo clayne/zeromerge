@@ -11,38 +11,46 @@ OUT=test_output.bin
 
 rm -f "$OUT"
 
-echo -n "Testing 4K blocks: "
+echo -n "Testing 4K blocks:  "
 $PROG test/missing1.bin test/missing2.bin $OUT >/dev/null
 if cmp -s test/correct.bin $OUT
 	then echo "PASSED"; ERR=0
 	else echo "FAILED"; ERR=1
 fi
 
-echo -n "Testing 4K + tail: "
+echo -n "Testing 4K + tail:  "
 $PROG test/missing1_short.bin test/missing2_short.bin $OUT >/dev/null
 if cmp -s test/correct_short.bin $OUT
 	then echo "PASSED"; ERR=0
 	else echo "FAILED"; ERR=1
 fi
 
-echo -n "Testing mismatch1: "
+echo -n "Testing mismatch1:  "
 if ! $PROG test/missing1.bin test/mismatch.bin $OUT 2>/dev/null >/dev/null
 	then echo "PASSED"; ERR=0
 	else echo "FAILED"; ERR=1
 fi
 
-echo -n "Testing mismatch2: "
+echo -n "Testing mismatch2:  "
 if ! $PROG test/missing1_short.bin test/mismatch_short.bin $OUT >/dev/null 2>/dev/null
 	then echo "PASSED"; ERR=0
 	else echo "FAILED"; ERR=1
 fi
 
-echo -n "Testing UnicodeNm: "
+echo -n "Testing UnicodeNam: "
 $PROG test/ちゅくちゅく１.bin test/ちゅくちゅく２.bin $OUT >/dev/null
 if cmp -s test/万斉.bin $OUT
 	then echo "PASSED"; ERR=0
 	else echo "FAILED"; ERR=1
 fi
+
+echo -n "Testing HardLinked: "
+ln -f test/missing1.bin test/hard_linked.bin || echo "ERROR: can't create hard link!"
+if ! $PROG test/missing1.bin test/hard_linked.bin $OUT #>/dev/null 2>/dev/null
+	then echo "PASSED"; ERR=0
+	else echo "FAILED"; ERR=1
+fi
+rm -f test/hard_linked.bin
 
 exit $ERR
 exit $ERR

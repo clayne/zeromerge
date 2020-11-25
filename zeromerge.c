@@ -182,6 +182,9 @@ int main(int argc, char **argv)
 	/* File sizes must match; sizes also needed for loop */
 	if (STAT(argv[1], &stat1) != 0) goto error_file1;
 	if (STAT(argv[2], &stat2) != 0) goto error_file2;
+//	fprintf(stderr, "DEBUG: size %lld,%lld dev %d,%d ino %lld,%lld\n", stat1.st_size, stat2.st_size, stat1.st_dev, stat2.st_dev, stat1.st_ino, stat2.st_ino);
+	/* Hard link protection check */
+	if (stat1.st_ino == stat2.st_ino && stat1.st_dev == stat2.st_dev) goto error_same_file;
 	if (stat1.st_size != stat2.st_size) goto error_file_sizes;
 	if (stat1.st_size == 0) goto error_empty_file;
 	remain = stat1.st_size;
@@ -254,6 +257,9 @@ int main(int argc, char **argv)
 	}
 	exit(EXIT_SUCCESS);
 
+error_same_file:
+	fprintf(stderr, "\nError: the input files appear to be hard linked\n");
+	exit(EXIT_FAILURE);
 error_different:
 	fprintf(stderr, "\nError: files contain different non-zero data\n");
 	exit(EXIT_FAILURE);
