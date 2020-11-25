@@ -123,12 +123,12 @@ int main(int argc, char **argv)
 	atexit(clean_exit);
 
 #ifdef ON_WINDOWS
-	/* Windows buffers our stderr output; don't let it do that */
-	if (setvbuf(stderr, NULL, _IONBF, 0) != 0)
+	/* Windows buffers our std output; don't let it do that */
+	if (setvbuf(stdout, NULL, _IONBF, 0) != 0 || setvbuf(stderr, NULL, _IONBF, 0) != 0)
 		fprintf(stderr, "warning: setvbuf() failed\n");
-	if (_isatty(_fileno(stderr))) stdout_tty = 1;
+	if (_isatty(_fileno(stdout))) stdout_tty = 1;
 #else
-	if (isatty(fileno(stderr))) stdout_tty = 1;
+	if (isatty(fileno(stdout))) stdout_tty = 1;
 #endif /* ON_WINDOWS */
 
 #ifdef UNICODE
