@@ -4,6 +4,7 @@
  */
 
 #include <fcntl.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -119,7 +120,7 @@ int main(int argc, char **argv)
 	int hide_progress = 0;
 	/* Progress is show in MiB by default */
 	int prog_shift = 20;
-	char prog_units = 'M';
+	int prog_units = 'M';
 
 	atexit(clean_exit);
 
@@ -233,12 +234,12 @@ int main(int argc, char **argv)
 			if (time2.tv_sec < time1.tv_sec) {
 				progress = stat1.st_size - remain;
 				if (stdout_tty == 1) printf("\r");
-				printf("[zeromerge] Progress: %lld%%, %lld of %lld %ciB (%lld %ciB/sec)",
-						(progress * 100) / stat1.st_size,
-						progress >> prog_shift,
-						stat1.st_size >> prog_shift,
+				printf("[zeromerge] Progress: %" PRIdMAX "%%, %" PRIdMAX " of %" PRIdMAX " %ciB (%" PRIdMAX " %ciB/sec)",
+						(intmax_t)((progress * 100) / stat1.st_size),
+						(intmax_t)progress >> prog_shift,
+						(intmax_t)stat1.st_size >> prog_shift,
 						prog_units,
-						(progress - lastprogress) >> prog_shift,
+						(intmax_t)(progress - lastprogress) >> prog_shift,
 						prog_units);
 				if (stdout_tty == 0) printf("\n");
 				fflush(stdout);
