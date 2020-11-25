@@ -18,7 +18,7 @@
 #include "version.h"
 
 /* File read size */
-#define READSIZE 1048576
+#define READSIZE 4194304
 
 /* Detect Windows and modify as needed */
 #if defined _WIN32 || defined __CYGWIN__
@@ -113,6 +113,7 @@ int main(int argc, char **argv)
 #endif
 	off_t remain;
 	off_t read1, read2, write;
+	off_t progress, lastprogress = 0;
 	struct timeval time1, time2;
 	int stdout_tty = 0;
 	int hide_progress = 0;
@@ -205,8 +206,6 @@ int main(int argc, char **argv)
 
 	/* Main loop */
 	while (remain > 0) {
-		off_t progress, lastprogress = 0;
-
 		read1 = (off_t)fread(&buf1, 1, READSIZE, fp1);
 		read2 = (off_t)fread(&buf2, 1, READSIZE, fp2);
 		if ((read1 != read2)) goto error_short_read;
