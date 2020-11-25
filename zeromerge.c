@@ -222,6 +222,7 @@ int main(int argc, char **argv)
 					progress >> 20,
 					stat1.st_size >> 20,
 					(progress - lastprogress) >> 20);
+			fflush(stdout);
 			time2.tv_sec = time1.tv_sec;
 			lastprogress = progress;
 		}
