@@ -114,6 +114,8 @@ int main(int argc, char **argv)
 	off_t remain;
 	off_t read1, read2, write;
 	struct timeval time1, time2;
+	int stdout_tty = 0;
+	int hide_progress = 0;
 
 	atexit(clean_exit);
 
@@ -121,7 +123,10 @@ int main(int argc, char **argv)
 	/* Windows buffers our stderr output; don't let it do that */
 	if (setvbuf(stderr, NULL, _IONBF, 0) != 0)
 		fprintf(stderr, "warning: setvbuf() failed\n");
-#endif
+	if (_isatty(_fileno(stderr))) stdout_tty = 1;
+#else
+	if (isatty(fileno(stderr))) stdout_tty = 1;
+#endif /* ON_WINDOWS */
 
 #ifdef UNICODE
 	/* Create a UTF-8 **argv from the wide version */
@@ -210,24 +215,33 @@ int main(int argc, char **argv)
 		write = (off_t)fwrite(&buf1, 1, (size_t)read2, fp3);
 		if (write != read2) goto error_short_write;
 		remain -= read2;
-		if (feof(fp1) && feof(fp2)) break;
 
-		/* Progress indicator */
-		gettimeofday(&time1, NULL);
-		if (time2.tv_sec < time1.tv_sec) {
-			progress = stat1.st_size - remain;
-			printf("\r[zeromerge] Progress: %lld%%, %lld of %lld MiB (%lld MiB/sec)",
-					(progress * 100) / stat1.st_size,
-					progress >> 20,
-					stat1.st_size >> 20,
-					(progress - lastprogress) >> 20);
-			fflush(stdout);
-			time2.tv_sec = time1.tv_sec;
-			lastprogress = progress;
+		/* Progress indicator - do not show if stdout not a TTY */
+		if (hide_progress == 0) {
+			gettimeofday(&time1, NULL);
+			if (time2.tv_sec < time1.tv_sec) {
+				progress = stat1.st_size - remain;
+				if (stdout_tty == 1) printf("\r");
+				printf("[zeromerge] Progress: %lld%%, %lld of %lld MiB (%lld MiB/sec)",
+						(progress * 100) / stat1.st_size,
+						progress >> 20,
+						stat1.st_size >> 20,
+						(progress - lastprogress) >> 20);
+				if (stdout_tty == 0) printf("\n");
+				fflush(stdout);
+				time2.tv_sec = time1.tv_sec;
+				lastprogress = progress;
+			}
 		}
+		if (feof(fp1) && feof(fp2)) break;
 	}
 
-	printf("\r[zeromerge] merge complete.                              \n");
+	if (hide_progress == 0) {
+		if (stdout_tty == 1) printf("\r");
+		printf("[zeromerge] merge complete.");
+		if (stdout_tty == 0) printf("\n");
+		else printf("                    \n");
+	}
 	exit(EXIT_SUCCESS);
 
 error_different:
