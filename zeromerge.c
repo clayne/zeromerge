@@ -116,6 +116,9 @@ int main(int argc, char **argv)
 	struct timeval time1, time2;
 	int stdout_tty = 0;
 	int hide_progress = 0;
+	/* Progress is show in MiB by default */
+	int prog_shift = 20;
+	char prog_units = 'M';
 
 	atexit(clean_exit);
 
@@ -182,6 +185,12 @@ int main(int argc, char **argv)
 	if (stat1.st_size == 0) goto error_empty_file;
 	remain = stat1.st_size;
 
+	/* Set units for progress indicator */
+	if (stat1.st_size < 1048576) {
+		prog_shift = 10;
+		prog_units = 'K';
+	}
+
 	/* If read and size check are OK, open file to write into */
 #ifdef UNICODE
 	M2W(file3, wname);
@@ -222,11 +231,13 @@ int main(int argc, char **argv)
 			if (time2.tv_sec < time1.tv_sec) {
 				progress = stat1.st_size - remain;
 				if (stdout_tty == 1) printf("\r");
-				printf("[zeromerge] Progress: %lld%%, %lld of %lld MiB (%lld MiB/sec)",
+				printf("[zeromerge] Progress: %lld%%, %lld of %lld %ciB (%lld %ciB/sec)",
 						(progress * 100) / stat1.st_size,
-						progress >> 20,
-						stat1.st_size >> 20,
-						(progress - lastprogress) >> 20);
+						progress >> prog_shift,
+						stat1.st_size >> prog_shift,
+						prog_units,
+						(progress - lastprogress) >> prog_shift,
+						prog_units);
 				if (stdout_tty == 0) printf("\n");
 				fflush(stdout);
 				time2.tv_sec = time1.tv_sec;
