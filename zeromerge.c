@@ -187,8 +187,7 @@ int main(int argc, char **argv)
 	if (!fp3) goto error_file3;
 
 	/* Set up progress indicator */
-	gettimeofday(&time1, NULL);
-	time2.tv_sec = time1.tv_sec;
+	time2.tv_sec = 0;
 
 	/* Main loop */
 	while (remain > 0) {
@@ -228,7 +227,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-	printf("\n[zeromerge] merge complete.");
+	printf("\r[zeromerge] merge complete.                              \n");
 	exit(EXIT_SUCCESS);
 
 error_different:
