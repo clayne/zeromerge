@@ -6,6 +6,7 @@
 
 # PREFIX determines where files will be installed. Common examples
 # include "/usr" or "/usr/local".
+#PREFIX = /usr
 PREFIX = /usr/local
 
 # Certain platforms do not support long options (command line options).
