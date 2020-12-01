@@ -26,7 +26,7 @@ if [ "$UNAME_S" = "darwin" ]
 fi
 
 # Detect Power Macs under macOS
-if [ "$UNAME_P" = "Power Macintosh" ]
+if [[ "$UNAME_P" = "Power Macintosh" || "$UNAME_P" = "powerpc" ]]
 	then
 	PKGTYPE=zip
 	TA=macppc32
@@ -62,6 +62,17 @@ E1=1; E2=0; E3=0
 make clean && make -j$PM stripped && cp $NAME$EXT $PKGNAME/$NAME$EXT && E1=0
 make clean
 test $((E1 + E2 + E3)) -gt 0 && echo "Error building packages; aborting." && exit 1
+# Make a fat binary on macOS x86_64 if possible
+if [ "$TA" = "mac64" ] && ld -v 2>&1 | grep -q 'archs:.*i386'
+	then
+	E1=1; E2=0; E3=0
+	BITS=32
+	make clean && make -j$PM CFLAGS_EXTRA=-m32 stripped && cp $NAME$EXT $PKGNAME/$NAME$EXT$BITS && E1=0
+	make clean
+	test $((E1 + E2 + E3)) -gt 0 && echo "Error building packages; aborting." && exit 1
+	test "$E1" = "0" && lipo -create -output $PKGNAME/${NAME}_temp $PKGNAME/$NAME$EXT$BITS $PKGNAME/$NAME$EXT && mv $PKGNAME/${NAME}_temp $PKGNAME/$NAME$EXT
+	rm -f $PKGNAME/$NAME$EXT$BITS
+fi
 test "$PKGTYPE" = "zip" && zip -9r $PKGNAME.zip $PKGNAME/
 test "$PKGTYPE" = "gz"  && tar -c $PKGNAME/ | gzip -9 > $PKGNAME.pkg.tar.gz
 test "$PKGTYPE" = "xz"  && tar -c $PKGNAME/ | xz -e > $PKGNAME.pkg.tar.xz
