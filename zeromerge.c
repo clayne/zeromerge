@@ -221,7 +221,7 @@ int main(int argc, char **argv)
 			/* Error if both bytes are non-zero and different */
 			if (buf1[read1] != buf2[read1] && buf1[read1] != 0 && buf2[read1] != 0)
 				goto error_different;
-			/* merge data into buf1*/
+			/* merge data into buf1 */
 			buf1[read1] |= buf2[read1];
 		}
 		write = (off_t)fwrite(&buf1, 1, (size_t)read2, fp3);
