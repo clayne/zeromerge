@@ -20,6 +20,7 @@ data gap and recover the full file.
 The program will abort if the file sizes differ or if any of the file data
 that mismatches is not all zeroes.
 
-### Please consider financially supporting continued development:
+### Please consider financially supporting continued development!
 
-https://www.subscribestar.com/JodyBruchon
+One-time or recurring donations are greatly appreciated, but not required.
+Use PayPal, Flattr, Ko-Fi, SubscribeStar, etc. links at jodybruchon.com
