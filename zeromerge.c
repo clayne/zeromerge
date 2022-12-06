@@ -254,7 +254,7 @@ int main(int argc, char **argv)
 		if (stdout_tty == 1) printf("\r");
 		printf("[zeromerge] merge complete.");
 		if (stdout_tty == 0) printf("\n");
-		else printf("                              \n");
+		else printf("                                            \n");
 	}
 	exit(EXIT_SUCCESS);
 
