@@ -19,7 +19,9 @@
 #include "version.h"
 
 /* File read size */
-#define READSIZE 4194304
+#ifndef READSIZE
+ #define READSIZE 1048576 * 8
+#endif
 
 /* Detect Windows and modify as needed */
 #if defined _WIN32 || defined __CYGWIN__
@@ -79,10 +81,11 @@ void clean_exit(void)
 static void version(void)
 {
 	printf("zeromerge %s (%s) by Jody Bruchon <jody@jodybruchon.com>\n", VER, VERDATE);
+	printf("Read buffer size is %u KiB\n", (unsigned int)(READSIZE >> 10));
 	printf("\nLatest versions and support:\n");
 	printf("        https://github.com/jbruchon/zeromerge\n");
-	printf("\nPlease consider supporting continued development:\n");
-	printf("        https://www.SubscribeStar.com/JodyBruchon\n\n");
+	printf("\nPlease consider supporting continued development with funding options at:\n");
+	printf("        https://www.JodyBruchon.com/\n\n");
 	return;
 }
 
