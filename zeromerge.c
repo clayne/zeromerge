@@ -14,8 +14,7 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "jody_win_unicode.h"
-#include "oom.h"
+#include <libjodycode.h>
 #include "version.h"
 
 /* File read size */
@@ -36,8 +35,7 @@
  #endif
  #include <windows.h>
  #include <io.h>
- #include "win_stat.h"
- #define STAT win_stat
+ #define STAT jc_win_stat
 // const char dir_sep = '\\';
  #ifdef UNICODE
   const wchar_t *FOPEN_R = L"rbS";
@@ -107,7 +105,7 @@ int main(int argc, char **argv)
 	static char buf2[READSIZE];
 	static char *file1, *file2, *file3;
 #ifdef ON_WINDOWS
-	struct winstat stat1, stat2;
+	struct jc_winstat stat1, stat2;
  #ifdef UNICODE
 	/* For Unicode conversions (_wfopen) */
 	static wchar_t wname[WPATH_MAX];
@@ -140,26 +138,22 @@ int main(int argc, char **argv)
 	/* Create a UTF-8 **argv from the wide version */
 	static char **argv;
 	argv = (char **)malloc(sizeof(char *) * (size_t)argc);
-	if (!argv) oom("main() unicode argv");
-	widearg_to_argv(argc, wargv, argv);
+	if (!argv) jc_oom("main() unicode argv");
+	jc_widearg_to_argv(argc, wargv, argv);
 	/* fix up __argv so getopt etc. don't crash */
 	__argv = argv;
-	/* Only use UTF-16 for terminal output, else use UTF-8 */
-	if (!_isatty(_fileno(stdout))) out_mode = _O_BINARY;
-	else out_mode = _O_U16TEXT;
-	if (!_isatty(_fileno(stderr))) err_mode = _O_BINARY;
-	else err_mode = _O_U16TEXT;
+	jc_set_output_modes(0x0c);
 #endif /* UNICODE */
 
 	strncpy(program_name, argv[0], PATH_MAX);
 
 	/* Help text if requested */
 	if (argc >= 2) {
-		if ((!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help"))) {
+		if ((!jc_streq(argv[1], "-h") || !jc_streq(argv[1], "--help"))) {
 			usage();
 			exit(EXIT_SUCCESS);
 		}
-		if ((!strcmp(argv[1], "-v") || !strcmp(argv[1], "-V") || !strcmp(argv[1], "--version"))) {
+		if ((!jc_streq(argv[1], "-v") || !jc_streq(argv[1], "-V") || !jc_streq(argv[1], "--version"))) {
 			version();
 			exit(EXIT_SUCCESS);
 		}
@@ -271,13 +265,13 @@ error_argcount:
 	usage();
 	exit(EXIT_FAILURE);
 error_file1:
-	fprintf(stderr, "\nError opening/reading "); fwprint(stderr, file1, 1);
+	fprintf(stderr, "\nError opening/reading "); jc_fwprint(stderr, file1, 1);
 	exit(EXIT_FAILURE);
 error_file2:
-	fprintf(stderr, "\nError opening/reading "); fwprint(stderr, file2, 1);
+	fprintf(stderr, "\nError opening/reading "); jc_fwprint(stderr, file2, 1);
 	exit(EXIT_FAILURE);
 error_file3:
-	fprintf(stderr, "\nError opening/reading "); fwprint(stderr, file3, 1);
+	fprintf(stderr, "\nError opening/reading "); jc_fwprint(stderr, file3, 1);
 	exit(EXIT_FAILURE);
 error_file_sizes:
 	fprintf(stderr, "\nError: file sizes are not identical\n");

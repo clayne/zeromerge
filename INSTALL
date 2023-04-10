@@ -1,0 +1,61 @@
+Building and Installing zeromerge
+-----------------------------------------------------------------------------
+You must have libjodycode to build and run zeromerge. Install the libjodycode
+library and development headers from your distribution package manager. These
+will probably be called "libjodycode" and "libjodycode-dev".
+
+If your distribution doesn't have libjodycode, get it here:
+
+https://github.com/jbruchon/libjodycode
+
+If you clone and build libjodycode into ../libjodycode/ and pass the option
+USE_NEARBY_JC=1 to make then the build will use the header and library in
+that location instead of the libjodycode already installed on the system.
+You can then test the dynamically linked zeromerge by telling it where to look:
+
+LD_LIBRARY_PATH=../libjodycode ./zeromerge
+
+To install the program with the default options and flags, just issue the
+following commands (note that btrfs support is off by default):
+
+make
+sudo make install
+
+This installs all zeromerge files under /usr/local by default. You may change this
+to a different location by editing the Makefile or specifying a PREFIX on the
+command line: 'make PREFIX=/usr install'. DESTDIR is also supported to place
+everything into a different location for i.e. building distribution packages:
+'make DESTDIR=/pkg/zeromerge install'.
+
+To force static or dynamic linking of libjodycode, use the make targets
+static_jc and dynamic_jc respectively. On Windows you must tell Make to use
+the DLL version explicitly: 'make FORCE_JC_DLL=1' (ld on Windows doesn't seem
+to respect -Wl,-Bdynamic properly).
+
+On Windows, you need to use MSYS2 with MinGW-w64 installed. Use this guide to
+install the build environment:
+
+https://stackoverflow.com/a/30071634/1906641
+
+Running "make" as usual under the MSYS2 mingw32/mingw64 terminal will build a
+Windows binary for the bitness of the terminal you're using. The Makefile will
+detect a Windows environment and automatically make the needed build changes.
+
+Various build options are available and can be turned on at compile time by
+setting CFLAGS_EXTRA or by passing it to 'make':
+
+make CFLAGS_EXTRA=-DYOUR_OPTION
+make CFLAGS_EXTRA='-DYOUR_OPTION_ONE -DYOUR_OPTION_TWO'
+
+This is a list of options that can be "turned on" this way:
+
+ON_WINDOWS             Modify code to compile with MinGW on Windows
+NO_WINDOWS             Disable Windows MinGW special cases (mainly for Cygwin)
+
+Certain options can be turned on by setting a variable passed to make instead
+of using CFLAGS_EXTRA, i.e. 'make DEBUG=1':
+
+NO_UNICODE             [Windows only] disable all Unicode support
+DEBUG                  Turn on algorithm statistic reporting with '-D'
+LOUD                   '-@' for low-level debugging; enables DEBUG
+GC_SECTIONS            Use gcc/ld section garbage collection to reduce size
