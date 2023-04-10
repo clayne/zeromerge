@@ -58,8 +58,16 @@ echo "Generating package for: $PKGNAME"
 mkdir -p "$PKGNAME"
 test ! -d "$PKGNAME" && echo "Can't create directory for package" && exit 1
 cp CHANGES README.md LICENSE $PKGNAME/
+if [ -d "../libjodycode" ]
+	then
+	echo "Rebuilding nearby libjodycode first"
+	WD="$(pwd)"
+	cd ../libjodycode
+	make clean && make -j$PM
+	cd "$WD"
+fi
 E1=1; E2=0; E3=0
-make clean && make -j$PM stripped && cp $NAME$EXT $PKGNAME/$NAME$EXT && E1=0
+make clean && make -j$PM USE_NEARBY_JC=1 static_jc stripped && cp $NAME$EXT $PKGNAME/$NAME$EXT && E1=0
 make clean
 test $((E1 + E2 + E3)) -gt 0 && echo "Error building packages; aborting." && exit 1
 # Make a fat binary on macOS x86_64 if possible
