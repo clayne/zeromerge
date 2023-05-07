@@ -15,11 +15,12 @@
 #include <sys/time.h>
 
 #include <libjodycode.h>
+#include "zeromerge_simd.h"
 #include "version.h"
 
 /* File read size */
 #ifndef READSIZE
- #define READSIZE 1048576 * 8
+ #define READSIZE (1048576 * 16)
 #endif
 
 /* Detect Windows and modify as needed */
@@ -101,9 +102,7 @@ int wmain(int argc, wchar_t **wargv)
 int main(int argc, char **argv)
 #endif
 {
-	static char buf1[READSIZE];
-	static char buf2[READSIZE];
-	static char *file1, *file2, *file3;
+	char *buf1, *buf2, *file1, *file2, *file3;
 #ifdef ON_WINDOWS
 	struct jc_winstat stat1, stat2;
  #ifdef UNICODE
@@ -119,9 +118,8 @@ int main(int argc, char **argv)
 	struct timeval time1, time2;
 	int stdout_tty = 0;
 	int hide_progress = 0;
-	/* Progress is show in MiB by default */
-	int prog_shift = 20;
-	int prog_units = 'M';
+	const char *prog_suffix = "B";
+	int prog_shift = 0;
 
 	atexit(clean_exit);
 
@@ -188,9 +186,13 @@ int main(int argc, char **argv)
 	remain = stat1.st_size;
 
 	/* Set units for progress indicator */
-	if (stat1.st_size < 1048576) {
-		prog_shift = 10;
-		prog_units = 'K';
+	for (int i = 0; jc_size_suffix[i].suffix != NULL; i++) {
+		if (jc_size_suffix[i].multiplier < stat1.st_size || jc_size_suffix[i].shift == 20) {
+			prog_shift = jc_size_suffix[i].shift;
+			prog_suffix = jc_size_suffix[i].suffix;
+		}
+		/* Limit to binary units */
+		if (prog_shift == 20) break;
 	}
 
 	/* If read and size check are OK, open file to write into */
@@ -205,10 +207,14 @@ int main(int argc, char **argv)
 	/* Set up progress indicator */
 	time2.tv_sec = 0;
 
+	buf1 = (char *)aligned_alloc(32, READSIZE);
+	buf2 = (char *)aligned_alloc(32, READSIZE);
+	if (!buf1 || !buf2) jc_oom("main() buffer allocation");
+
 	/* Main loop */
 	while (remain > 0) {
-		read1 = (off_t)fread(&buf1, 1, READSIZE, fp1);
-		read2 = (off_t)fread(&buf2, 1, READSIZE, fp2);
+		read1 = (off_t)fread(buf1, 1, READSIZE, fp1);
+		read2 = (off_t)fread(buf2, 1, READSIZE, fp2);
 		if ((read1 != read2)) goto error_short_read;
 		if (ferror(fp1)) goto error_file1;
 		if (ferror(fp2)) goto error_file2;
@@ -221,7 +227,7 @@ int main(int argc, char **argv)
 			/* merge data into buf1 */
 			buf1[read1] |= buf2[read1];
 		}
-		write = (off_t)fwrite(&buf1, 1, (size_t)read2, fp3);
+		write = (off_t)fwrite(buf1, 1, (size_t)read2, fp3);
 		if (write != read2) goto error_short_write;
 		remain -= read2;
 
@@ -231,13 +237,13 @@ int main(int argc, char **argv)
 			if (time2.tv_sec < time1.tv_sec) {
 				progress = stat1.st_size - remain;
 				if (stdout_tty == 1) printf("\r");
-				printf("[zeromerge] Progress: %" PRIdMAX "%%, %" PRIdMAX " of %" PRIdMAX " %ciB (%" PRIdMAX " %ciB/sec)",
+				printf("[zeromerge] Progress: %" PRIdMAX "%%, %" PRIdMAX " of %" PRIdMAX " %s (%" PRIdMAX " %s/sec)",
 						(intmax_t)((progress * 100) / stat1.st_size),
 						(intmax_t)progress >> prog_shift,
 						(intmax_t)stat1.st_size >> prog_shift,
-						prog_units,
+						prog_suffix,
 						(intmax_t)(progress - lastprogress) >> prog_shift,
-						prog_units);
+						prog_suffix);
 				if (stdout_tty == 0) printf("\n");
 				fflush(stdout);
 				time2.tv_sec = time1.tv_sec;
@@ -246,6 +252,8 @@ int main(int argc, char **argv)
 		}
 		if (feof(fp1) && feof(fp2)) break;
 	}
+	ALIGNED_FREE(buf1);
+	ALIGNED_FREE(buf2);
 
 	if (hide_progress == 0) {
 		if (stdout_tty == 1) printf("\r");

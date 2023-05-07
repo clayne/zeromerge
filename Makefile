@@ -37,7 +37,7 @@ INSTALL_DATA    = $(INSTALL) -m 0644
 # Make Configuration
 COMPILER_OPTIONS = -Wall -Wextra -Wwrite-strings -Wcast-align -Wstrict-aliasing -Wstrict-overflow -Wstrict-prototypes -Wpointer-arith -Wundef
 COMPILER_OPTIONS += -Wshadow -Wfloat-equal -Wstrict-overflow=5 -Waggregate-return -Wcast-qual -Wswitch-default -Wswitch-enum -Wconversion -Wunreachable-code -Wformat=2 -Winit-self
-COMPILER_OPTIONS += -std=gnu99 -O2 -g -D_FILE_OFFSET_BITS=64 -fstrict-aliasing -pipe
+COMPILER_OPTIONS += -std=gnu11 -O2 -g -D_FILE_OFFSET_BITS=64 -fstrict-aliasing -pipe
 
 # Remove unused code if requested
 ifdef GC_SECTIONS
@@ -57,6 +57,8 @@ COMPILER_OPTIONS += -DNDEBUG
 endif
 ifdef HARDEN
 COMPILER_OPTIONS += -Wformat -Wformat-security -D_FORTIFY_SOURCE=2 -fstack-protector-strong -fPIE -fpie -Wl,-z,relro -Wl,-z,now
+else
+#COMPILER_OPTIONS += -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0
 endif
 
 # MinGW needs this for printf() conversions to work
