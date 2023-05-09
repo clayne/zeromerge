@@ -99,7 +99,8 @@ LDFLAGS += $(LINK_OPTIONS) $(LDFLAGS_EXTRA)
 
 OBJS += zeromerge.o
 
-all: $(PROGRAM_NAME)
+
+all: libjodycode_hint $(PROGRAM_NAME)
 
 dynamic_jc: $(PROGRAM_NAME)
 	$(CC) $(CFLAGS) $(OBJS) -Wl,-Bdynamic $(LDFLAGS) -o $(PROGRAM_NAME)$(SUFFIX)
@@ -160,3 +161,6 @@ package:
 	+./generate_packages.sh
 
 FORCE:
+
+libjodycode_hint:
+	@echo "hint: if ../libjodycode is built and Make fails, try doing 'make USE_NEARBY_JC=1 static_jc'"$$'\n'
