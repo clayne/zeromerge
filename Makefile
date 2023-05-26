@@ -142,7 +142,7 @@ uninstall: uninstalldirs
 	$(RM)	$(DESTDIR)$(BIN_DIR)/$(PROGRAM_NAME)$(SUFFIX)
 	$(RM)	$(DESTDIR)$(MAN_DIR)/$(PROGRAM_NAME).$(MAN_EXT)
 
-test: zeromerge FORCE
+test: zeromerge
 	./test.sh
 
 stripped: $(PROGRAM_NAME)
@@ -159,8 +159,6 @@ chrootpackage:
 	+./chroot_build.sh
 package:
 	+./generate_packages.sh
-
-FORCE:
 
 libjodycode_hint:
 	@echo "hint: if ../libjodycode is built and Make fails, try doing 'make USE_NEARBY_JC=1 static_jc'"$$'\n'
