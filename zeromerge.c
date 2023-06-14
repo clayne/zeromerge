@@ -15,6 +15,7 @@
 #include <sys/time.h>
 
 #include <libjodycode.h>
+#include "libjodycode_check.h"
 #include "zeromerge_simd.h"
 #include "version.h"
 
@@ -132,12 +133,22 @@ int main(int argc, char **argv)
 	if (isatty(fileno(stdout))) stdout_tty = 1;
 #endif /* ON_WINDOWS */
 
+	/* Verify libjodycode compatibility before going further */
+	if (libjodycode_version_check(1, 0) != 0) {
+		exit(EXIT_FAILURE);
+	}
+
 #ifdef UNICODE
 	/* Create a UTF-8 **argv from the wide version */
 	static char **argv;
+	int wa_err;
 	argv = (char **)malloc(sizeof(char *) * (size_t)argc);
 	if (!argv) jc_oom("main() unicode argv");
-	jc_widearg_to_argv(argc, wargv, argv);
+	wa_err = jc_widearg_to_argv(argc, wargv, argv);
+	if (wa_err != 0) {
+		jc_print_error(wa_err);
+		exit(EXIT_FAILURE);
+	}
 	/* fix up __argv so getopt etc. don't crash */
 	__argv = argv;
 	jc_set_output_modes(0x0c);
@@ -218,9 +229,23 @@ int main(int argc, char **argv)
 		if ((read1 != read2)) goto error_short_read;
 		if (ferror(fp1)) goto error_file1;
 		if (ferror(fp2)) goto error_file2;
+		read1 = 0;
 
+#if 0
+#if (defined __GNUC__ || defined __clang__) && (defined USE_AVX2 || defined USE_SSE2)
+		if (count >= 32) {
+			__builtin_cpu_init ();
+#ifdef USE_AVX2
+			if (__builtin_cpu_supports ("avx2")) read1 = zero_merge_avx2(read1, read2, buf1, buf2);
+#endif
+#ifdef USE_SSE2
+			else if (__builtin_cpu_supports ("sse2")) read1 = zero_merge_sse2(read1, read2, buf1, buf2);
+#endif
+		}
+#endif
+#endif // 0
 		/* Merge data between buffers */
-		for (read1 = 0; read1 < read2; read1++) {
+		for (; read1 < read2; read1++) {
 			/* Error if both bytes are non-zero and different */
 			if (buf1[read1] != buf2[read1] && buf1[read1] != 0 && buf2[read1] != 0)
 				goto error_different;

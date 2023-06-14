@@ -46,8 +46,8 @@ union UINT256 {
 
 #endif
 
-extern size_t zero_merge_avx2(char *buf1, char *buf2, off_t length);
-extern size_t zero_merge_sse2(char *buf1, char *buf2, off_t length);
+extern size_t zero_merge_avx2(size_t pos, size_t length, char *buf1, char *buf2);
+extern size_t zero_merge_sse2(size_t pos, size_t length, char *buf1, char *buf2);
 
 #ifdef __cplusplus
 }

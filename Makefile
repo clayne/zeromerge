@@ -97,7 +97,7 @@ LDFLAGS += $(LINK_OPTIONS) $(LDFLAGS_EXTRA)
 # to support features not supplied by their vendor. Eg: GNU getopt()
 #ADDITIONAL_OBJECTS += getopt.o
 
-OBJS += zeromerge.o
+OBJS += libjodycode_check.o zeromerge.o
 
 
 all: libjodycode_hint $(PROGRAM_NAME)
