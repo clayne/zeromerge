@@ -11,8 +11,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <limits.h>
-#include <time.h>
-#include <sys/time.h>
 
 #include <libjodycode.h>
 #include "libjodycode_check.h"
@@ -115,8 +113,8 @@ int main(int argc, char **argv)
 #endif
 	off_t remain;
 	off_t read1, read2, write;
-	off_t progress, lastprogress = 0;
-	struct timeval time1, time2;
+	off_t progress;
+	static int seconds = 0;
 	int stdout_tty = 0;
 	int hide_progress = 0;
 	const char *prog_suffix = "B";
@@ -215,12 +213,15 @@ int main(int argc, char **argv)
 #endif /* UNICODE */
 	if (!fp3) goto error_file3;
 
-	/* Set up progress indicator */
-	time2.tv_sec = 0;
-
 	buf1 = (char *)aligned_alloc(32, READSIZE);
 	buf2 = (char *)aligned_alloc(32, READSIZE);
 	if (!buf1 || !buf2) jc_oom("main() buffer allocation");
+
+	/* Start progress timer and force immediate update */
+	if (hide_progress == 0) {
+		jc_start_alarm(1, 1);
+		jc_alarm_ring = 1;
+	}
 
 	/* Main loop */
 	while (remain > 0) {
@@ -257,23 +258,20 @@ int main(int argc, char **argv)
 		remain -= read2;
 
 		/* Progress indicator - do not show if stdout not a TTY */
-		if (hide_progress == 0) {
-			gettimeofday(&time1, NULL);
-			if (time2.tv_sec < time1.tv_sec) {
-				progress = stat1.st_size - remain;
-				if (stdout_tty == 1) printf("\r");
-				printf("[zeromerge] Progress: %" PRIdMAX "%%, %" PRIdMAX " of %" PRIdMAX " %s (%" PRIdMAX " %s/sec)",
-						(intmax_t)((progress * 100) / stat1.st_size),
-						(intmax_t)progress >> prog_shift,
-						(intmax_t)stat1.st_size >> prog_shift,
-						prog_suffix,
-						(intmax_t)(progress - lastprogress) >> prog_shift,
-						prog_suffix);
-				if (stdout_tty == 0) printf("\n");
-				fflush(stdout);
-				time2.tv_sec = time1.tv_sec;
-				lastprogress = progress;
-			}
+		if (hide_progress == 0 && jc_alarm_ring == 1) {
+			jc_alarm_ring = 0;
+			progress = stat1.st_size - remain;
+			seconds++;
+			if (stdout_tty == 1) printf("\r");
+			printf("[zeromerge] Progress: %" PRIdMAX "%%, %" PRIdMAX " of %" PRIdMAX " %s (%" PRIdMAX " %s/sec)",
+					(intmax_t)((progress * 100) / stat1.st_size),
+					(intmax_t)progress >> prog_shift,
+					(intmax_t)stat1.st_size >> prog_shift,
+					prog_suffix,
+					(intmax_t)(progress / seconds) >> prog_shift,
+					prog_suffix);
+			if (stdout_tty == 0) printf("\n");
+			fflush(stdout);
 		}
 		if (feof(fp1) && feof(fp2)) break;
 	}
@@ -281,6 +279,7 @@ int main(int argc, char **argv)
 	ALIGNED_FREE(buf2);
 
 	if (hide_progress == 0) {
+		jc_stop_alarm();
 		if (stdout_tty == 1) printf("\r");
 		printf("[zeromerge] merge complete.");
 		if (stdout_tty == 0) printf("\n");
