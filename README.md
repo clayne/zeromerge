@@ -23,4 +23,4 @@ that mismatches is not all zeroes.
 ### Please consider financially supporting continued development!
 
 One-time or recurring donations are greatly appreciated, but not required.
-Use PayPal, Flattr, Ko-Fi, SubscribeStar, etc. links at jodybruchon.com
+Use PayPal, Ko-Fi, SubscribeStar, etc. links at jodybruchon.com
