@@ -8,10 +8,10 @@ If your distribution doesn't have libjodycode, get it here:
 
 https://github.com/jbruchon/libjodycode
 
-If you clone and build libjodycode into ../libjodycode/ and pass the option
-USE_NEARBY_JC=1 to make then the build will use the header and library in
-that location instead of the libjodycode already installed on the system.
-You can then test the dynamically linked zeromerge by telling it where to look:
+If you clone and build libjodycode into ../libjodycode/ then the build will use
+the header and library in that location instead of the libjodycode already
+installed on the system. You can then test the dynamically linked jdupes by
+telling it where to look:
 
 LD_LIBRARY_PATH=../libjodycode ./zeromerge
 
