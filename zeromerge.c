@@ -79,6 +79,7 @@ void clean_exit(void)
 static void version(void)
 {
 	printf("zeromerge %s (%s) by Jody Bruchon <jody@jodybruchon.com>\n", VER, VERDATE);
+	printf("Linked to libjodycode %s (%s)\n", LIBJODYCODE_VER, LIBJODYCODE_VERDATE);
 	printf("Read buffer size is %u KiB\n", (unsigned int)(READSIZE >> 10));
 	printf("\nLatest versions and support:\n");
 	printf("        https://github.com/jbruchon/zeromerge\n");
@@ -114,12 +115,12 @@ int main(int argc, char **argv)
 	off_t remain;
 	off_t read1, read2, write;
 	off_t progress;
-	unsigned int seconds = 0;
+	int seconds = 0;
 	int stdout_tty = 0;
 	int hide_progress = 0;
 	const char *prog_suffix = "B";
 	int prog_shift = 0;
-	uintmax_t processed = 0;
+	intmax_t processed = 0;
 
 	atexit(clean_exit);
 
@@ -257,7 +258,7 @@ int main(int argc, char **argv)
 		write = (off_t)fwrite(buf1, 1, (size_t)read2, fp3);
 		if (write != read2) goto error_short_write;
 		remain -= read2;
-		processed += (uintmax_t)read2;
+		processed += (intmax_t)read2;
 
 		/* Progress indicator - do not show if stdout not a TTY */
 		if (hide_progress == 0 && jc_alarm_ring != 0) {
