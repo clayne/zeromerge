@@ -260,10 +260,10 @@ int main(int argc, char **argv)
 		processed += (uintmax_t)read2;
 
 		/* Progress indicator - do not show if stdout not a TTY */
-		if (hide_progress == 0 && jc_alarm_ring == 1) {
+		if (hide_progress == 0 && jc_alarm_ring != 0) {
+			seconds += jc_alarm_ring;
 			jc_alarm_ring = 0;
 			progress = stat1.st_size - remain;
-			seconds++;
 			if (stdout_tty == 1) printf("\r");
 			printf("[zeromerge] Progress: %" PRIdMAX "%%, %" PRIdMAX " of %" PRIdMAX " %s (%" PRIdMAX " %s/sec)",
 					(intmax_t)((progress * 100) / stat1.st_size),
