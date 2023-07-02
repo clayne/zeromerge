@@ -84,7 +84,7 @@ ifndef IGNORE_NEARBY_JC
   $(info Found and using nearby libjodycode at ../libjodycode)
   COMPILER_OPTIONS += -I../libjodycode -L../libjodycode
   ifeq ("$(wildcard ../libjodycode/version.o)","")
-   $(error You must build libjodycode before building jdupes)
+   $(error You must build libjodycode before building $(PROGRAM_NAME))
   endif
  endif
  ifdef FORCE_JC_DLL
