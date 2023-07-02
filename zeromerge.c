@@ -114,11 +114,12 @@ int main(int argc, char **argv)
 	off_t remain;
 	off_t read1, read2, write;
 	off_t progress;
-	static int seconds = 0;
+	unsigned int seconds = 0;
 	int stdout_tty = 0;
 	int hide_progress = 0;
 	const char *prog_suffix = "B";
 	int prog_shift = 0;
+	uintmax_t processed = 0;
 
 	atexit(clean_exit);
 
@@ -256,6 +257,7 @@ int main(int argc, char **argv)
 		write = (off_t)fwrite(buf1, 1, (size_t)read2, fp3);
 		if (write != read2) goto error_short_write;
 		remain -= read2;
+		processed += (uintmax_t)read2;
 
 		/* Progress indicator - do not show if stdout not a TTY */
 		if (hide_progress == 0 && jc_alarm_ring == 1) {
@@ -268,7 +270,7 @@ int main(int argc, char **argv)
 					(intmax_t)progress >> prog_shift,
 					(intmax_t)stat1.st_size >> prog_shift,
 					prog_suffix,
-					(intmax_t)(progress / seconds) >> prog_shift,
+					(intmax_t)(processed / seconds) >> prog_shift,
 					prog_suffix);
 			if (stdout_tty == 0) printf("\n");
 			fflush(stdout);
