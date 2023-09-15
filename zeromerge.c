@@ -37,19 +37,10 @@
  #include <io.h>
  #define STAT jc_win_stat
 // const char dir_sep = '\\';
- #ifdef UNICODE
-  const wchar_t *FOPEN_R = L"rbS";
-  const wchar_t *FOPEN_W = L"wbS";
- #else
-  const char *FOPEN_R = "rbS";
-  const char *FOPEN_W = "wbS";
- #endif /* UNICODE */
 
 #else /* Not Windows */
  #include <sys/stat.h>
  #define STAT stat
- const char *FOPEN_R = "rb";
- const char *FOPEN_W = "wb";
 // const char dir_sep = '/';
  #ifdef UNICODE
   #error Do not define UNICODE on non-Windows platforms.
@@ -105,10 +96,6 @@ int main(int argc, char **argv)
 	char *buf1, *buf2, *file1, *file2, *file3;
 #ifdef ON_WINDOWS
 	struct jc_winstat stat1, stat2;
- #ifdef UNICODE
-	/* For Unicode conversions (_wfopen) */
-	static wchar_t wname[WPATH_MAX];
- #endif
 #else
 	struct stat stat1, stat2;
 #endif
@@ -174,15 +161,8 @@ int main(int argc, char **argv)
 	file1 = argv[1]; file2 = argv[2]; file3 = argv[3];
 
 	/* Open files to merge */
-#ifdef UNICODE
-	M2W(file1, wname);
-	fp1 = _wfopen(wname, FOPEN_R);
-	M2W(file2, wname);
-	fp2 = _wfopen(wname, FOPEN_R);
-#else
-	fp1 = fopen(file1, FOPEN_R);
-	fp2 = fopen(file2, FOPEN_R);
-#endif /* UNICODE */
+	fp1 = jc_fopen(file1, JC_FILE_MODE_RDONLY_SEQ);
+	fp2 = jc_fopen(file2, JC_FILE_MODE_RDONLY_SEQ);
 	if (!fp1) goto error_file1;
 	if (!fp2) goto error_file2;
 
@@ -207,12 +187,7 @@ int main(int argc, char **argv)
 	}
 
 	/* If read and size check are OK, open file to write into */
-#ifdef UNICODE
-	M2W(file3, wname);
-	fp3 = _wfopen(wname, FOPEN_W);
-#else
-	fp3 = fopen(file3, FOPEN_W);
-#endif /* UNICODE */
+	fp3 = jc_fopen(file3, JC_FILE_MODE_WRONLY_SEQ);
 	if (!fp3) goto error_file3;
 
 	buf1 = (char *)aligned_alloc(32, READSIZE);
